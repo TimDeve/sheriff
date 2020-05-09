@@ -1,0 +1,48 @@
+(use Array)
+(use Map)
+
+(defmodule Michael
+  (deftype JsonNode [v String])
+
+  (sig s (Fn [String] JsonNode))
+  (defn s [string] (JsonNode.init (String.concat &[@"\"" string @"\""])))
+
+  (sig n (Fn [Double] JsonNode))
+  (defn n [double] (JsonNode.init (Double.str double)))
+
+  (sig b (Fn [Bool] JsonNode))
+  (defn b [boolean] (JsonNode.init (Bool.str boolean)))
+
+  (sig a (Fn [(Array JsonNode)] JsonNode))
+  (defn a [arr]
+    (JsonNode.init
+      (String.concat &[@"["
+                       (String.join
+                        ", "
+                        &(copy-map
+                          &(fn [n] @(JsonNode.v n))
+                          &arr))
+                       @"]"])))
+
+  (sig o (Fn [(Map String JsonNode)] JsonNode))
+  (defn o [m]
+    (JsonNode.init
+      (String.concat &[@"{"
+                        (==> (to-array &m)
+                             (ref)
+                             (copy-map
+                              &(fn [arg]
+                                 (String.concat &[@"\""
+                                                  @(Pair.a arg)
+                                                  @"\""
+                                                  @": "
+                                                  @(JsonNode.v (Pair.b arg))])))
+                             (ref)
+                             (String.join ", "))
+                       @"}"])))
+
+  (sig stringify (Fn [(Ref JsonNode)] String))
+  (defn stringify [node] @(JsonNode.v node))
+
+  (sig null (Fn [] JsonNode))
+  (defn null [] (JsonNode.init @"null")))

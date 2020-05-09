@@ -1,0 +1,25 @@
+(load "michael.carp")
+
+(defn main []
+  (with Michael
+    (do
+     (println* (stringify &(a [(s @"Hello")
+                               (n 1.0)
+                               (null)])))
+
+     (println* (stringify &(a [(a [(s @"Hello")
+                                   (n 1.0)
+                                   (null)])
+                               (a [(s @"Hello")
+                                   (n 1.0)
+                                   (null)])
+                               (a [(s @"Hello")
+                                   (n 3.14)
+                                   (null)])])))
+
+     (println* (stringify &(o {@"field-a" (s @"sup")
+                               @"field-b" (null)})))
+
+     (println* (stringify &(o {@"field-a" (s @"sup")
+                               @"field-b" (o {@"an-array"
+                                              (a [(n 1.0) (n 2.0) (n 3.0)])})}))))))
