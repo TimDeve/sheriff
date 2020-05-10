@@ -8,7 +8,7 @@
   (defn s [string] (JsonNode.init (String.concat &[@"\"" string @"\""])))
 
   (sig n (Fn [Double] JsonNode))
-  (defn n [double] (JsonNode.init (Double.str double)))
+  (defn n [double] (JsonNode.init (fmt "%.16g" double)))
 
   (sig b (Fn [Bool] JsonNode))
   (defn b [boolean] (JsonNode.init (Bool.str boolean)))

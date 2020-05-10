@@ -25,10 +25,10 @@
     &(stringify &(n 3.14))
     "Works with numbers with decimals")
 
-;  (assert-equal test
-;    "3.12345678"
-;    &(stringify &(n 3.12345678))
-;    "Works with numbers with a lot of decimals")
+  (assert-equal test
+    "3.123456789123456"
+    &(stringify &(n 3.123456789123456))
+    "Works with numbers with a lot of decimals")
 
   (assert-equal test
     "\"Hello Carp\""
