@@ -1,8 +1,9 @@
 (load "Test.carp")
-(load "michael.carp")
+
+(load "../michael.carp")
 
 (use Test)
-(use Michael)
+(use Michael.DSL)
 
 (deftest test
   (assert-equal test
