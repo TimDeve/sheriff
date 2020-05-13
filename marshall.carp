@@ -23,39 +23,15 @@
                   (Michael.create-pair t v)
                   (members t)))))
 
+  (defndynamic stringify [t v]
+    (list 'Michael.DSL.stringify
+          (list 'ref
+                (list 'Michael.DSL.o
+                      (list 'Map.from-array
+                            (list 'ref (Michael.create-arr-for-map t rf)))))))
+
   (defmacro marshall [t v]
-    (let [string (gensym-with t) rf (gensym-with 'rf)]
-      (list
-       'let (array rf
-                   v
-                   string
-                   (list
-                    'Michael.DSL.stringify
-                    (list 'ref (list
-                                'Michael.DSL.o
-                                (list 'Map.from-array
-                                      (list 'ref (Michael.create-arr-for-map t rf)))))))
-       string))))
+    (let [string (gensym-with t) rf (gensym-with 'reference)]
+      (list 'let (array rf v string (Michael.stringify t rf))
+            string))))
 
-
-(defmodule Sheriff
-  (defndynamic from-str [t]
-   (case t
-    'Int 'Int.from-string
-    'String 'String.str
-    'Bool 'Bool.from-string
-    (macro-error "Only Int, String and Bool are allowed in struct to unmarshall to")))
-
-  (defmacro unmarshall [t m]
-    (let [var (gensym-with t)]
-      (list
-       'let (array var
-                   (cons (Symbol.prefix t 'init)
-                         (map
-                          (fn [x]
-                           (list (Sheriff.from-str (cadr x))
-                                 (list 'ref (list 'Map.get
-                                                   m
-                                                   (str (car x))))))
-                          (members t))))
-        var))))
