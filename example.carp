@@ -1,7 +1,7 @@
 (load "michael.carp")
 
 (defn main []
-  (with Michael
+  (with Michael.DSL
     (do
      (println* (stringify &(a [(s @"Hello")
                                (n 1.0)

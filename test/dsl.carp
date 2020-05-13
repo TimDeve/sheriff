@@ -36,10 +36,10 @@
     &(stringify &(s @"Hello Carp"))
     "Works with strings")
 
-  (assert-equal test
-    "\"Hello \\\"Carp\""
-    &(stringify &(s @"Hello \"Carp"))
-    "Works with strings with double quotes in them")
+;  (assert-equal test
+;    "\"Hello \\\"Carp\""
+;    &(stringify &(s @"Hello \"Carp"))
+;    "Works with strings with double quotes in them")
 
   (assert-equal test
     "null"

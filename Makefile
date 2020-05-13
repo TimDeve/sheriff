@@ -1,5 +1,11 @@
-test:
+pre-push: tests build-example
+
+build-example:
+	carp -x example.carp
+
+tests:
 	./test.sh
 
-test_watch:
+test-watch:
 	npx nodemon -e carp -x ./test.sh
+
