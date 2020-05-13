@@ -1,0 +1,61 @@
+(load "dsl.carp")
+
+(defmodule Michael
+  (defndynamic to-str [t]
+   (case t
+    'Double 'Michael.DSL.n
+    'String 'Michael.DSL.s
+    'Bool 'Michael.DSL.b
+    (macro-error "Only Double, String and Bool are allowed in struct to marshall")))
+
+  (defndynamic create-pair [t v]
+    (fn [type-pair]
+      (list 'Pair.init
+         (list 'copy (str (car type-pair)))
+         (list (Michael.to-str (cadr type-pair))
+               (list 'copy (list (Symbol.prefix t (car type-pair)) v))))))
+
+  (defndynamic create-arr-for-map [t v]
+    (list 'the
+          (list 'Array (list 'Pair 'String 'Michael.DSL.JsonNode))
+          (cons array
+                 (map
+                  (Michael.create-pair t v)
+                  (members t)))))
+
+  (defmacro marshall [t v]
+    (let [string (gensym-with t) rf (gensym-with 'rf)]
+      (list
+       'let (array rf
+                   v
+                   string
+                   (list
+                    'Michael.DSL.stringify
+                    (list 'ref (list
+                                'Michael.DSL.o
+                                (list 'Map.from-array
+                                      (list 'ref (Michael.create-arr-for-map t rf)))))))
+       string))))
+
+
+(defmodule Sheriff
+  (defndynamic from-str [t]
+   (case t
+    'Int 'Int.from-string
+    'String 'String.str
+    'Bool 'Bool.from-string
+    (macro-error "Only Int, String and Bool are allowed in struct to unmarshall to")))
+
+  (defmacro unmarshall [t m]
+    (let [var (gensym-with t)]
+      (list
+       'let (array var
+                   (cons (Symbol.prefix t 'init)
+                         (map
+                          (fn [x]
+                           (list (Sheriff.from-str (cadr x))
+                                 (list 'ref (list 'Map.get
+                                                   m
+                                                   (str (car x))))))
+                          (members t))))
+        var))))

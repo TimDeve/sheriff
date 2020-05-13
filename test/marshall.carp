@@ -1,0 +1,31 @@
+(load "Test.carp")
+
+(load "../michael.carp")
+
+(use Test)
+
+(deftype ABool [boooo Bool])
+(deftype ADouble [val Double])
+(deftype AString [sam String])
+(deftype All [bam Bool dang Double soom String])
+
+(deftest test
+  (assert-equal test
+    "{\"boooo\": true}"
+    &(Michael.marshall ABool &(ABool.init true))
+    "Works with Bool")
+
+  (assert-equal test
+    "{\"val\": 10}"
+    &(Michael.marshall ADouble &(ADouble.init 10.0))
+    "Works with Double")
+
+  (assert-equal test
+    "{\"sam\": \"Hello\"}"
+    &(Michael.marshall AString &(AString.init @"Hello"))
+    "Works with Double")
+
+  (assert-equal test
+    "{\"dang\": 3.14, \"soom\": \"Carp\", \"bam\": false}"
+    &(Michael.marshall All &(All.init false 3.14 @"Carp"))
+    "All together now"))

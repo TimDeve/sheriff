@@ -1,8 +1,16 @@
 (load "michael.carp")
 
-(defn main []
+(deftype SomeStruct [a-double Double a-string String a-bool Bool])
+
+(defn marshall-example []
+  (do
+   (println* "---Marshall---")
+   (println* (Michael.marshall SomeStruct &(SomeStruct.init 3.14 @"Hi" false)))))
+
+(defn dsl-example []
   (with Michael.DSL
     (do
+     (println* "---DSL---")
      (println* (stringify &(a [(s @"Hello")
                                (n 1.0)
                                (null)])))
@@ -23,3 +31,10 @@
      (println* (stringify &(o {@"field-a" (s @"sup")
                                @"field-b" (o {@"an-array"
                                               (a [(n 1.0) (n 2.0) (n 3.0)])})}))))))
+
+(defn main []
+  (do 
+   (marshall-example)
+   (println* "")
+   (dsl-example)))
+

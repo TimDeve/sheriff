@@ -1,6 +1,6 @@
-pre-push: tests build-example
+pre-push: tests run-example
 
-build-example:
+run-example:
 	carp -x example.carp
 
 tests:
