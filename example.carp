@@ -9,8 +9,9 @@
    (println* (Sheriff.JSON.marshall SomeStruct &(SomeStruct.init 3.14 @"Hi" false)))
    (println* (Sheriff.JSON.marshall Nested &(Nested.init @"Carp" (SomeStruct.init 3.14 @"Hi" false))))
    (println* (Sheriff.JSON.marshall (Array SomeStruct) &[(SomeStruct.init 1.34 @"Hi" false)
-                                                    (SomeStruct.init 3.14 @"Hello" true)]))
+                                                         (SomeStruct.init 3.14 @"Hello" true)]))
    (println* (Sheriff.JSON.marshall (Maybe String) &(Maybe.Nothing)))))
+
 
 (defn dsl-example []
   (with Sheriff.JSON.DSL
@@ -37,9 +38,22 @@
                                @"field-b" (o {@"an-array"
                                               (a [(n 1.0) (n 2.0) (n 3.0)])})}))))))
 
+
+(deftype KvType [keyone Int keytwo String keythree Bool])
+
+(defn kv-example []
+  (do
+   (println* "---KV---")
+   (println* &(Sheriff.KV.unmarshall KvType &{@"keythree" @"true"
+                                              @"keyone" @"3"
+                                              @"keytwo" @"wow"}))))
+
+
 (defn main []
   (do
    (marshall-example)
    (println* "")
-   (dsl-example)))
+   (dsl-example)
+   (println* "")
+   (kv-example)))
 
