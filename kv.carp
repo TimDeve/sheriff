@@ -1,0 +1,25 @@
+(defmodule Sheriff
+ (defmodule KV
+  (defn bool-from-string [s]
+    (= s "true"))
+
+  (defndynamic from-str [t]
+   (case t
+    'Int 'Int.from-string
+    'String 'String.str
+    'Bool 'Sheriff.KV.bool-from-string
+    (macro-error "Only Int, String and Bool are allowed in struct to unmarshall to")))
+
+  (defmacro unmarshall [t m]
+    (let [var (gensym-with t)]
+      (list
+       'let (array var
+                   (cons (Symbol.prefix t 'init)
+                         (map
+                          (fn [x]
+                           (list (Sheriff.KV.from-str (cadr x))
+                                 (list 'ref (list 'Map.get
+                                                   m
+                                                   (str (car x))))))
+                          (members t))))
+        var)))))
