@@ -97,5 +97,6 @@
 
   (defmacro marshall [t v]
     (let [string (gensym-with 'type) rf (gensym-with 'reference)]
-      (list 'let (array rf v string (Michael.stringify t rf))
+      (list 'let (array rf (list 'the (list 'Ref t) v)
+                        string (Michael.stringify t rf))
             string))))

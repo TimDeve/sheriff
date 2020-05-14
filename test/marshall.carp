@@ -59,7 +59,7 @@
   (assert-equal test
     "{\"key-two\": {\"arr\": [1234.5678], \"dang\": 3.14, \"soom\": \"Carp\", \"bam\": false}, \"key-one\": {\"boooo\": true}}"
     &(Michael.marshall Nested &(Nested.init
-                                (ABool.init true) 
+                                (ABool.init true)
                                 (All.init false 3.14 @"Carp" [1234.5678])))
     "Works with nested structs"))
 
