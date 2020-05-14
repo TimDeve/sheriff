@@ -2,7 +2,7 @@
 
 (load "Test.carp")
 
-(load "../michael.carp")
+(load "../sheriff.carp")
 
 (use Test)
 
@@ -20,62 +20,62 @@
 (deftest test
   (assert-equal test
     "true"
-    &(Michael.marshall Bool &true)
+    &(Sheriff.JSON.marshall Bool &true)
     "Works with just Bool")
 
   (assert-equal test
     "1"
-    &(Michael.marshall Double &1.00)
+    &(Sheriff.JSON.marshall Double &1.00)
     "Works with just Double")
 
   (assert-equal test
     "\"Sup\""
-    &(Michael.marshall String "Sup")
+    &(Sheriff.JSON.marshall String "Sup")
     "Works with just String")
 
   (assert-equal test
     "[1, 2, 3]"
-    &(Michael.marshall (Array Double) &[1.0, 2.0, 3.0])
+    &(Sheriff.JSON.marshall (Array Double) &[1.0, 2.0, 3.0])
     "Works with Array")
 
   (assert-equal test
     "[\"one\", \"two\"]"
-    &(Michael.marshall (Array String) &[@"one" @"two"])
+    &(Sheriff.JSON.marshall (Array String) &[@"one" @"two"])
     "Works with String Array")
 
   (assert-equal test
     "[{\"boooo\": true}, {\"boooo\": false}]"
-    &(Michael.marshall (Array ABool) &[(ABool.init true) (ABool.init false)])
+    &(Sheriff.JSON.marshall (Array ABool) &[(ABool.init true) (ABool.init false)])
     "Works with Struct Array")
 
   (assert-equal test
     "\"Wow\""
-    &(Michael.marshall (Maybe String) &(Maybe.Just @"Wow"))
+    &(Sheriff.JSON.marshall (Maybe String) &(Maybe.Just @"Wow"))
     "Works with Maybe Just")
 
   (assert-equal test
    "null"
-   &(Michael.marshall (Maybe String) &(Maybe.Nothing))
+   &(Sheriff.JSON.marshall (Maybe String) &(Maybe.Nothing))
    "Works with Maybe Nothing")
 
  (assert-equal test
    "{\"boooo\": true}"
-   &(Michael.marshall ABool &(ABool.init true))
+   &(Sheriff.JSON.marshall ABool &(ABool.init true))
    "Works with Bool")
 
  (assert-equal test
    "{\"val\": 10}"
-   &(Michael.marshall ADouble &(ADouble.init 10.0))
+   &(Sheriff.JSON.marshall ADouble &(ADouble.init 10.0))
    "Works with Double")
 
  (assert-equal test
    "{\"sam\": \"Hello\"}"
-   &(Michael.marshall AString &(AString.init @"Hello"))
+   &(Sheriff.JSON.marshall AString &(AString.init @"Hello"))
    "Works with String")
 
  (assert-equal test
    "{\"arr\": [1, 2], \"dang\": 3.14, \"soom\": \"Carp\", \"nil\": \"maybe\", \"bam\": false}"
-   &(Michael.marshall All &(All.init false 
+   &(Sheriff.JSON.marshall All &(All.init false 
                                      3.14 
                                      @"Carp" 
                                      [1.0, 2.0] 
@@ -84,7 +84,7 @@
 
  (assert-equal test
    "{\"key-two\": {\"arr\": [1234.5678], \"dang\": 3.14, \"soom\": \"Carp\", \"nil\": null, \"bam\": false}, \"key-one\": {\"boooo\": true}}"
-   &(Michael.marshall Nested &(Nested.init
+   &(Sheriff.JSON.marshall Nested &(Nested.init
                                (ABool.init true)
                                (All.init false 3.14 @"Carp" [1234.5678] (Maybe.Nothing))))
    "Works with nested structs"))

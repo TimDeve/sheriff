@@ -2,10 +2,10 @@
 
 (load "Test.carp")
 
-(load "../michael.carp")
+(load "../sheriff.carp")
 
 (use Test)
-(use Michael.DSL)
+(use Sheriff.JSON.DSL)
 
 (deftest test
   (assert-equal test

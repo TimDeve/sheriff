@@ -1,118 +1,120 @@
 (load "dsl.carp")
 
-(defmodule Michael
-  (defndynamic is-array-type? [t]
-    (if (and (list? t) (not (empty? t)))
-      (= 'Array (car t))
-      false))
+(defmodule Sheriff
+  (defmodule JSON
+    (defndynamic is-array-type? [t]
+      (if (and (list? t) (not (empty? t)))
+        (= 'Array (car t))
+        false))
 
-  (defndynamic get-array-type [t]
-    (cadr t))
+    (defndynamic get-array-type [t]
+      (cadr t))
 
-  (defndynamic is-maybe-type? [t]
-    (if (and (list? t) (not (empty? t)))
-      (= 'Maybe (car t))
-      false))
+    (defndynamic is-maybe-type? [t]
+      (if (and (list? t) (not (empty? t)))
+        (= 'Maybe (car t))
+        false))
 
-  (defndynamic get-maybe-type [t]
-    (cadr t))
+    (defndynamic get-maybe-type [t]
+      (cadr t))
 
-  (defndynamic not-supported-message [t]
-    (macro-error (String.concat [(str t) " are not allowed in struct to marshall"])))
+    (defndynamic not-supported-message [t]
+      (macro-error (String.concat [(str t) " are not allowed in struct to marshall"])))
 
-  (defndynamic not-supported? [t]
-    (if (list? t)
-      (and (not (Michael.is-array-type? t)) (not (Michael.is-maybe-type? t)))
-      (any? (fn [x] (= t x)) '(Maybe
-                               Result
-                               RefBool
-                               Byte
-                               ByteRef
-                               Int
-                               IntRef
-                               Long
-                               DoubleRef
-                               Float
-                               FloatRef
-                               PairRef
-                               Pair
-                               StaticArray
-                               Array
-                               Char
-                               CharRef
-                               StringCopy
-                               Int8
-                               Int8Extra
-                               Int16
-                               Int16Extra
-                               Int32
-                               Int32Extra
-                               Int64
-                               Int64Extra
-                               Uint8
-                               Uint8Extra
-                               Uint16
-                               Uint16Extra
-                               Uint32
-                               Uint32Extra
-                               Uint64
-                               Uint64Extra
-                               Pattern
-                               Map
-                               Set))))
+    (defndynamic not-supported? [t]
+      (if (list? t)
+        (and (not (Sheriff.JSON.is-array-type? t)) 
+             (not (Sheriff.JSON.is-maybe-type? t)))
+        (any? (fn [x] (= t x)) '(Maybe
+                                 Result
+                                 RefBool
+                                 Byte
+                                 ByteRef
+                                 Int
+                                 IntRef
+                                 Long
+                                 DoubleRef
+                                 Float
+                                 FloatRef
+                                 PairRef
+                                 Pair
+                                 StaticArray
+                                 Array
+                                 Char
+                                 CharRef
+                                 StringCopy
+                                 Int8
+                                 Int8Extra
+                                 Int16
+                                 Int16Extra
+                                 Int32
+                                 Int32Extra
+                                 Int64
+                                 Int64Extra
+                                 Uint8
+                                 Uint8Extra
+                                 Uint16
+                                 Uint16Extra
+                                 Uint32
+                                 Uint32Extra
+                                 Uint64
+                                 Uint64Extra
+                                 Pattern
+                                 Map
+                                 Set))))
 
-  (defndynamic to-str [t v]
-    (if (Michael.not-supported? t)
-        (Michael.not-supported-message t)
-        (if (Michael.is-array-type? t)
-          (Michael.arr t v)
-          (if (Michael.is-maybe-type? t)
-            (Michael.maybe t v)
-            (case t
-              'Double (list 'Michael.DSL.n (list 'copy v))
-              'String (list 'Michael.DSL.s (list 'copy v))
-              'Bool (list 'Michael.DSL.b (list 'copy v))
-              (Michael.object t v))))))
+    (defndynamic to-str [t v]
+      (if (Sheriff.JSON.not-supported? t)
+          (Sheriff.JSON.not-supported-message t)
+          (if (Sheriff.JSON.is-array-type? t)
+            (Sheriff.JSON.arr t v)
+            (if (Sheriff.JSON.is-maybe-type? t)
+              (Sheriff.JSON.maybe t v)
+              (case t
+                'Double (list 'Sheriff.JSON.DSL.n (list 'copy v))
+                'String (list 'Sheriff.JSON.DSL.s (list 'copy v))
+                'Bool (list 'Sheriff.JSON.DSL.b (list 'copy v))
+                (Sheriff.JSON.object t v))))))
 
-  (defndynamic create-pair [t v]
-    (fn [type-pair]
-      (list 'Pair.init
-         (list 'copy (str (car type-pair)))
-         (Michael.to-str (cadr type-pair)
-                         (list (Symbol.prefix t (car type-pair)) v)))))
+    (defndynamic create-pair [t v]
+      (fn [type-pair]
+        (list 'Pair.init
+           (list 'copy (str (car type-pair)))
+           (Sheriff.JSON.to-str (cadr type-pair)
+                           (list (Symbol.prefix t (car type-pair)) v)))))
 
-  (defndynamic create-arr-for-map [t v]
-    (list 'the
-          (list 'Array (list 'Pair 'String 'Michael.DSL.JsonNode))
-          (cons array
-                 (map
-                  (Michael.create-pair t v)
-                  (members t)))))
+    (defndynamic create-arr-for-map [t v]
+      (list 'the
+            (list 'Array (list 'Pair 'String 'Sheriff.JSON.DSL.JsonNode))
+            (cons array
+                   (map
+                    (Sheriff.JSON.create-pair t v)
+                    (members t)))))
 
-  (defndynamic object [t v]
-    (list 'Michael.DSL.o
-          (list 'Map.from-array
-                (list 'ref (Michael.create-arr-for-map t v)))))
+    (defndynamic object [t v]
+      (list 'Sheriff.JSON.DSL.o
+            (list 'Map.from-array
+                  (list 'ref (Sheriff.JSON.create-arr-for-map t v)))))
 
-  (defndynamic arr [t v]
-   (let [map-fn (list 'fn (array 'x)
-                    (Michael.to-str (Michael.get-array-type t) 'x))]
-        (list 'Michael.DSL.a 
-              (list 'Array.copy-map (list 'ref map-fn)
-                                    v))))
+    (defndynamic arr [t v]
+     (let [map-fn (list 'fn (array 'x)
+                      (Sheriff.JSON.to-str (Sheriff.JSON.get-array-type t) 'x))]
+          (list 'Sheriff.JSON.DSL.a 
+                (list 'Array.copy-map (list 'ref map-fn)
+                                      v))))
 
-  (defndynamic maybe [t v]
-    (let [val (gensym-with 'val)]
-      (list 'match-ref v
-        (list 'Maybe.Just val) (Michael.to-str (Michael.get-maybe-type t) val)
-        'Maybe.Nothing (list 'Michael.DSL.null))))
+    (defndynamic maybe [t v]
+      (let [val (gensym-with 'val)]
+        (list 'match-ref v
+          (list 'Maybe.Just val) (Sheriff.JSON.to-str (Sheriff.JSON.get-maybe-type t) val)
+          'Maybe.Nothing (list 'Sheriff.JSON.DSL.null))))
 
-  (defndynamic stringify [t v]
-    (list 'Michael.DSL.stringify
-          (list 'ref (Michael.to-str t v))))
+    (defndynamic stringify [t v]
+      (list 'Sheriff.JSON.DSL.stringify
+            (list 'ref (Sheriff.JSON.to-str t v))))
 
-  (defmacro marshall [t v]
-    (let [rf (gensym-with 'reference)]
-      (list (list 'fn []
-             (list 'let (array rf (list 'the (list 'Ref t) v))
-                   (Michael.stringify t rf)))))))
+    (defmacro marshall [t v]
+      (let [rf (gensym-with 'reference)]
+        (list (list 'fn []
+               (list 'let (array rf (list 'the (list 'Ref t) v))
+                     (Sheriff.JSON.stringify t rf))))))))

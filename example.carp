@@ -1,4 +1,4 @@
-(load "michael.carp")
+(load "sheriff.carp")
 
 (deftype SomeStruct [a-double Double a-string String a-bool Bool])
 (deftype Nested [key String nest SomeStruct])
@@ -6,14 +6,14 @@
 (defn marshall-example []
   (do
    (println* "---Marshall---")
-   (println* (Michael.marshall SomeStruct &(SomeStruct.init 3.14 @"Hi" false)))
-   (println* (Michael.marshall Nested &(Nested.init @"Carp" (SomeStruct.init 3.14 @"Hi" false))))
-   (println* (Michael.marshall (Array SomeStruct) &[(SomeStruct.init 1.34 @"Hi" false)
+   (println* (Sheriff.JSON.marshall SomeStruct &(SomeStruct.init 3.14 @"Hi" false)))
+   (println* (Sheriff.JSON.marshall Nested &(Nested.init @"Carp" (SomeStruct.init 3.14 @"Hi" false))))
+   (println* (Sheriff.JSON.marshall (Array SomeStruct) &[(SomeStruct.init 1.34 @"Hi" false)
                                                     (SomeStruct.init 3.14 @"Hello" true)]))
-   (println* (Michael.marshall (Maybe String) &(Maybe.Nothing)))))
+   (println* (Sheriff.JSON.marshall (Maybe String) &(Maybe.Nothing)))))
 
 (defn dsl-example []
-  (with Michael.DSL
+  (with Sheriff.JSON.DSL
     (do
      (println* "---DSL---")
      (println* (stringify &(a [(s @"Hello")
