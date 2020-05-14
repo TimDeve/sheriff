@@ -1,3 +1,3 @@
-(load "kv.carp")
-(load "dsl.carp")
-(load "marshall.carp")
+(load "src/kv.carp")
+(load "src/dsl.carp")
+(load "src/marshall.carp")
