@@ -38,10 +38,20 @@
     &(stringify &(s @"Hello Carp"))
     "Works with strings")
 
-;  (assert-equal test
-;    "\"Hello \\\"Carp\""
-;    &(stringify &(s @"Hello \"Carp"))
-;    "Works with strings with double quotes in them")
+  (assert-equal test
+    "\"Hello \\\"Carp\""
+    &(stringify &(s @"Hello \"Carp"))
+    "Works with strings with double quotes in them")
+
+  (assert-equal test
+    "\"\\\"\\'\\t\\r\\n\\\\\""
+    &(stringify &(s @"\"'\t\r\n\\"))
+    "Works with strings with 'bad' char in them")
+
+  ;(assert-equal test
+  ;  "\"\\b\\f\""
+  ;  &(stringify &(s @"\b\f"))
+  ;  "Works with strings with backspace and form feed")
 
   (assert-equal test
     "null"

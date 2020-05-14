@@ -4,10 +4,25 @@
 (defmodule Sheriff
   (defmodule JSON
     (defmodule DSL
+      (defn escape-string [s]
+        (let [sub $[(Pair.init @#"\\" @"\\\\\\\\")
+                    (Pair.init @#"\"" @"\\\\\"")
+                    (Pair.init @#"'" @"\\\\'")
+                    (Pair.init @#"\t" @"\\\\t")
+                    ;(Pair.init @#"\b" @"\\\\b")
+                    ;(Pair.init @#"\f" @"\\\\f")
+                    (Pair.init @#"\r" @"\\\\r")
+                    (Pair.init @#"\n" @"\\\\n")]]
+          (StaticArray.reduce
+           &(fn [acc pair]
+             (Pattern.substitute (Pair.a pair) &acc (Pair.b pair) -1))
+           s
+           sub)))
+
       (deftype JsonNode [v String])
 
       (sig s (Fn [String] JsonNode))
-      (defn s [string] (JsonNode.init (fmt "\"%s\"" &string)))
+      (defn s [string] (JsonNode.init (fmt "\"%s\"" &(escape-string string))))
 
       (sig n (Fn [Double] JsonNode))
       (defn n [double] (JsonNode.init (fmt "%.16g" double)))
