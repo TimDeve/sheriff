@@ -9,7 +9,8 @@
    (println* (Michael.marshall SomeStruct &(SomeStruct.init 3.14 @"Hi" false)))
    (println* (Michael.marshall Nested &(Nested.init @"Carp" (SomeStruct.init 3.14 @"Hi" false))))
    (println* (Michael.marshall (Array SomeStruct) &[(SomeStruct.init 1.34 @"Hi" false)
-                                                    (SomeStruct.init 3.14 @"Hello" true)]))))
+                                                    (SomeStruct.init 3.14 @"Hello" true)]))
+   (println* (Michael.marshall (Maybe String) &(Maybe.Nothing)))))
 
 (defn dsl-example []
   (with Michael.DSL

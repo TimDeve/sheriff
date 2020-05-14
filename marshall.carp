@@ -9,12 +9,20 @@
   (defndynamic get-array-type [t]
     (cadr t))
 
+  (defndynamic is-maybe-type? [t]
+    (if (and (list? t) (not (empty? t)))
+      (= 'Maybe (car t))
+      false))
+
+  (defndynamic get-maybe-type [t]
+    (cadr t))
+
   (defndynamic not-supported-message [t]
     (macro-error (String.concat [(str t) " are not allowed in struct to marshall"])))
 
   (defndynamic not-supported? [t]
     (if (list? t)
-      (not (Michael.is-array-type? t))
+      (and (not (Michael.is-array-type? t)) (not (Michael.is-maybe-type? t)))
       (any? (fn [x] (= t x)) '(Maybe
                                Result
                                RefBool
@@ -58,11 +66,13 @@
         (Michael.not-supported-message t)
         (if (Michael.is-array-type? t)
           (Michael.arr t v)
-          (case t
-            'Double (list 'Michael.DSL.n (list 'copy v))
-            'String (list 'Michael.DSL.s (list 'copy v))
-            'Bool (list 'Michael.DSL.b (list 'copy v))
-            (Michael.object t v)))))
+          (if (Michael.is-maybe-type? t)
+            (Michael.maybe t v)
+            (case t
+              'Double (list 'Michael.DSL.n (list 'copy v))
+              'String (list 'Michael.DSL.s (list 'copy v))
+              'Bool (list 'Michael.DSL.b (list 'copy v))
+              (Michael.object t v))))))
 
   (defndynamic create-pair [t v]
     (fn [type-pair]
@@ -91,12 +101,18 @@
               (list 'Array.copy-map (list 'ref map-fn)
                                     v))))
 
+  (defndynamic maybe [t v]
+    (let [val (gensym-with 'val)]
+      (list 'match-ref v
+        (list 'Maybe.Just val) (Michael.to-str (Michael.get-maybe-type t) val)
+        'Maybe.Nothing (list 'Michael.DSL.null))))
+
   (defndynamic stringify [t v]
     (list 'Michael.DSL.stringify
           (list 'ref (Michael.to-str t v))))
 
   (defmacro marshall [t v]
-    (let [string (gensym-with 'type) rf (gensym-with 'reference)]
-      (list 'let (array rf (list 'the (list 'Ref t) v)
-                        string (Michael.stringify t rf))
-            string))))
+    (let [rf (gensym-with 'reference)]
+      (list (list 'fn []
+             (list 'let (array rf (list 'the (list 'Ref t) v))
+                   (Michael.stringify t rf)))))))
