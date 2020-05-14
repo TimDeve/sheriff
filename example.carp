@@ -1,11 +1,13 @@
 (load "michael.carp")
 
 (deftype SomeStruct [a-double Double a-string String a-bool Bool])
+(deftype Nested [key String nest SomeStruct])
 
 (defn marshall-example []
   (do
    (println* "---Marshall---")
-   (println* (Michael.marshall SomeStruct &(SomeStruct.init 3.14 @"Hi" false)))))
+   (println* (Michael.marshall SomeStruct &(SomeStruct.init 3.14 @"Hi" false)))
+   (println* (Michael.marshall Nested &(Nested.init @"Carp" (SomeStruct.init 3.14 @"Hi" false))))))
 
 (defn dsl-example []
   (with Michael.DSL

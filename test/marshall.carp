@@ -8,8 +8,24 @@
 (deftype ADouble [val Double])
 (deftype AString [sam String])
 (deftype All [bam Bool dang Double soom String])
+(deftype Nested [key-one ABool key-two All])
 
 (deftest test
+  (assert-equal test
+    "true"
+    &(Michael.marshall Bool &true)
+    "Works with just Bool")
+
+  (assert-equal test
+    "1"
+    &(Michael.marshall Double &1.00)
+    "Works with just Double")
+
+  (assert-equal test
+    "\"Sup\""
+    &(Michael.marshall String "Sup")
+    "Works with just String")
+
   (assert-equal test
     "{\"boooo\": true}"
     &(Michael.marshall ABool &(ABool.init true))
@@ -28,4 +44,10 @@
   (assert-equal test
     "{\"dang\": 3.14, \"soom\": \"Carp\", \"bam\": false}"
     &(Michael.marshall All &(All.init false 3.14 @"Carp"))
-    "All together now"))
+    "All together now")
+
+  (assert-equal test
+    "{\"key-two\": {\"dang\": 3.14, \"soom\": \"Carp\", \"bam\": false}, \"key-one\": {\"boooo\": true}}"
+    &(Michael.marshall Nested &(Nested.init (ABool.init true) (All.init false 3.14 @"Carp")))
+    "Works with nested structs"))
+

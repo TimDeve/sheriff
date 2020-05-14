@@ -1,19 +1,63 @@
 (load "dsl.carp")
 
 (defmodule Michael
-  (defndynamic to-str [t]
-   (case t
-    'Double 'Michael.DSL.n
-    'String 'Michael.DSL.s
-    'Bool 'Michael.DSL.b
-    (macro-error "Only Double, String and Bool are allowed in struct to marshall")))
+  (defndynamic not-supported-message [t]
+    (macro-error (String.concat [(str t) " are not allowed in struct to marshall"])))
+
+  (defndynamic not-supported? [t]
+    (any? (fn [x] (= t x)) '(Maybe
+                             Result
+                             RefBool
+                             Byte
+                             ByteRef
+                             Int
+                             IntRef
+                             Long
+                             DoubleRef
+                             Float
+                             FloatRef
+                             PairRef
+                             Pair
+                             StaticArray
+                             Array
+                             Char
+                             CharRef
+                             StringCopy
+                             Int8
+                             Int8Extra
+                             Int16
+                             Int16Extra
+                             Int32
+                             Int32Extra
+                             Int64
+                             Int64Extra
+                             Uint8
+                             Uint8Extra
+                             Uint16
+                             Uint16Extra
+                             Uint32
+                             Uint32Extra
+                             Uint64
+                             Uint64Extra
+                             Pattern
+                             Map
+                             Set)))
+
+  (defndynamic to-str [t v]
+    (if (Michael.not-supported? t)
+        (Michael.not-supported-message t)
+        (case t
+          'Double (list 'Michael.DSL.n (list 'copy v))
+          'String (list 'Michael.DSL.s (list 'copy v))
+          'Bool (list 'Michael.DSL.b (list 'copy v))
+          (Michael.object t v))))
 
   (defndynamic create-pair [t v]
     (fn [type-pair]
       (list 'Pair.init
          (list 'copy (str (car type-pair)))
-         (list (Michael.to-str (cadr type-pair))
-               (list 'copy (list (Symbol.prefix t (car type-pair)) v))))))
+         (Michael.to-str (cadr type-pair)
+                         (list (Symbol.prefix t (car type-pair)) v)))))
 
   (defndynamic create-arr-for-map [t v]
     (list 'the
@@ -23,15 +67,16 @@
                   (Michael.create-pair t v)
                   (members t)))))
 
+  (defndynamic object [t v]
+    (list 'Michael.DSL.o
+          (list 'Map.from-array
+                (list 'ref (Michael.create-arr-for-map t v)))))
+
   (defndynamic stringify [t v]
     (list 'Michael.DSL.stringify
-          (list 'ref
-                (list 'Michael.DSL.o
-                      (list 'Map.from-array
-                            (list 'ref (Michael.create-arr-for-map t rf)))))))
+          (list 'ref (Michael.to-str t v))))
 
   (defmacro marshall [t v]
     (let [string (gensym-with t) rf (gensym-with 'reference)]
       (list 'let (array rf v string (Michael.stringify t rf))
             string))))
-
