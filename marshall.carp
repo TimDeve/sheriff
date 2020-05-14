@@ -1,56 +1,68 @@
 (load "dsl.carp")
 
 (defmodule Michael
+  (defndynamic is-array-type? [t]
+    (if (and (list? t) (not (empty? t)))
+      (= 'Array (car t))
+      false))
+
+  (defndynamic get-array-type [t]
+    (cadr t))
+
   (defndynamic not-supported-message [t]
     (macro-error (String.concat [(str t) " are not allowed in struct to marshall"])))
 
   (defndynamic not-supported? [t]
-    (any? (fn [x] (= t x)) '(Maybe
-                             Result
-                             RefBool
-                             Byte
-                             ByteRef
-                             Int
-                             IntRef
-                             Long
-                             DoubleRef
-                             Float
-                             FloatRef
-                             PairRef
-                             Pair
-                             StaticArray
-                             Array
-                             Char
-                             CharRef
-                             StringCopy
-                             Int8
-                             Int8Extra
-                             Int16
-                             Int16Extra
-                             Int32
-                             Int32Extra
-                             Int64
-                             Int64Extra
-                             Uint8
-                             Uint8Extra
-                             Uint16
-                             Uint16Extra
-                             Uint32
-                             Uint32Extra
-                             Uint64
-                             Uint64Extra
-                             Pattern
-                             Map
-                             Set)))
+    (if (list? t)
+      (not (Michael.is-array-type? t))
+      (any? (fn [x] (= t x)) '(Maybe
+                               Result
+                               RefBool
+                               Byte
+                               ByteRef
+                               Int
+                               IntRef
+                               Long
+                               DoubleRef
+                               Float
+                               FloatRef
+                               PairRef
+                               Pair
+                               StaticArray
+                               Array
+                               Char
+                               CharRef
+                               StringCopy
+                               Int8
+                               Int8Extra
+                               Int16
+                               Int16Extra
+                               Int32
+                               Int32Extra
+                               Int64
+                               Int64Extra
+                               Uint8
+                               Uint8Extra
+                               Uint16
+                               Uint16Extra
+                               Uint32
+                               Uint32Extra
+                               Uint64
+                               Uint64Extra
+                               Pattern
+                               Map
+                               Set))))
 
   (defndynamic to-str [t v]
     (if (Michael.not-supported? t)
         (Michael.not-supported-message t)
-        (case t
-          'Double (list 'Michael.DSL.n (list 'copy v))
-          'String (list 'Michael.DSL.s (list 'copy v))
-          'Bool (list 'Michael.DSL.b (list 'copy v))
-          (Michael.object t v))))
+        (if (Michael.is-array-type? t)
+          (Michael.arr t v)
+          (case t
+            'Double (list 'Michael.DSL.n (list 'copy v))
+            'String (list 'Michael.DSL.s (list 'copy v))
+            'Bool (list 'Michael.DSL.b (list 'copy v))
+            (Michael.object t v)))))
 
   (defndynamic create-pair [t v]
     (fn [type-pair]
@@ -72,11 +84,18 @@
           (list 'Map.from-array
                 (list 'ref (Michael.create-arr-for-map t v)))))
 
+  (defndynamic arr [t v]
+   (let [map-fn (list 'fn (array 'x)
+                    (Michael.to-str (Michael.get-array-type t) 'x))]
+        (list 'Michael.DSL.a 
+              (list 'Array.copy-map (list 'ref map-fn)
+                                    v))))
+
   (defndynamic stringify [t v]
     (list 'Michael.DSL.stringify
           (list 'ref (Michael.to-str t v))))
 
   (defmacro marshall [t v]
-    (let [string (gensym-with t) rf (gensym-with 'reference)]
+    (let [string (gensym-with 'type) rf (gensym-with 'reference)]
       (list 'let (array rf v string (Michael.stringify t rf))
             string))))

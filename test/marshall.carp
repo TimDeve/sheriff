@@ -7,7 +7,7 @@
 (deftype ABool [boooo Bool])
 (deftype ADouble [val Double])
 (deftype AString [sam String])
-(deftype All [bam Bool dang Double soom String])
+(deftype All [bam Bool dang Double soom String arr (Array Double)])
 (deftype Nested [key-one ABool key-two All])
 
 (deftest test
@@ -27,6 +27,16 @@
     "Works with just String")
 
   (assert-equal test
+    "[1, 2, 3]"
+    &(Michael.marshall (Array Double) &[1.0, 2.0, 3.0])
+    "Works with Array")
+
+  (assert-equal test
+    "[\"one\", \"two\"]"
+    &(Michael.marshall (Array String) &[@"one" @"two"])
+    "Works with String Array")
+
+  (assert-equal test
     "{\"boooo\": true}"
     &(Michael.marshall ABool &(ABool.init true))
     "Works with Bool")
@@ -39,15 +49,17 @@
   (assert-equal test
     "{\"sam\": \"Hello\"}"
     &(Michael.marshall AString &(AString.init @"Hello"))
-    "Works with Double")
+    "Works with String")
 
   (assert-equal test
-    "{\"dang\": 3.14, \"soom\": \"Carp\", \"bam\": false}"
-    &(Michael.marshall All &(All.init false 3.14 @"Carp"))
+    "{\"arr\": [1, 2], \"dang\": 3.14, \"soom\": \"Carp\", \"bam\": false}"
+    &(Michael.marshall All &(All.init false 3.14 @"Carp" [1.0, 2.0]))
     "All together now")
 
   (assert-equal test
-    "{\"key-two\": {\"dang\": 3.14, \"soom\": \"Carp\", \"bam\": false}, \"key-one\": {\"boooo\": true}}"
-    &(Michael.marshall Nested &(Nested.init (ABool.init true) (All.init false 3.14 @"Carp")))
+    "{\"key-two\": {\"arr\": [1234.5678], \"dang\": 3.14, \"soom\": \"Carp\", \"bam\": false}, \"key-one\": {\"boooo\": true}}"
+    &(Michael.marshall Nested &(Nested.init
+                                (ABool.init true) 
+                                (All.init false 3.14 @"Carp" [1234.5678])))
     "Works with nested structs"))
 

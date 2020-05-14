@@ -35,7 +35,7 @@
                                               (a [(n 1.0) (n 2.0) (n 3.0)])})}))))))
 
 (defn main []
-  (do 
+  (do
    (marshall-example)
    (println* "")
    (dsl-example)))
