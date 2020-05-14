@@ -9,8 +9,8 @@
                     (Pair.init @#"\"" @"\\\\\"")
                     (Pair.init @#"'" @"\\\\'")
                     (Pair.init @#"\t" @"\\\\t")
-                    ;(Pair.init @#"\b" @"\\\\b")
-                    ;(Pair.init @#"\f" @"\\\\f")
+                    (Pair.init (Pattern.init "\b") @"\\\\b")
+                    (Pair.init (Pattern.init "\f") @"\\\\f")
                     (Pair.init @#"\r" @"\\\\r")
                     (Pair.init @#"\n" @"\\\\n")]]
           (StaticArray.reduce
