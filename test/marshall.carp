@@ -37,6 +37,11 @@
     "Works with String Array")
 
   (assert-equal test
+    "[{\"boooo\": true}, {\"boooo\": false}]"
+    &(Michael.marshall (Array ABool) &[(ABool.init true) (ABool.init false)])
+    "Works with Struct Array")
+
+  (assert-equal test
     "{\"boooo\": true}"
     &(Michael.marshall ABool &(ABool.init true))
     "Works with Bool")
