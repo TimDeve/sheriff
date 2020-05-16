@@ -10,81 +10,81 @@
 (deftest test
   (assert-equal test
     "true"
-    &(stringify &(b true))
+    &(stringify (b true))
     "Works with true")
 
   (assert-equal test
     "false"
-    &(stringify &(b false))
+    &(stringify (b false))
     "Works with false")
 
   (assert-equal test
     "1"
-    &(stringify &(n 1.0))
+    &(stringify (n 1.0))
     "Works with numbers")
 
   (assert-equal test
     "3.14"
-    &(stringify &(n 3.14))
+    &(stringify (n 3.14))
     "Works with numbers with decimals")
 
   (assert-equal test
     "3.123456789123456"
-    &(stringify &(n 3.123456789123456))
+    &(stringify (n 3.123456789123456))
     "Works with numbers with a lot of decimals")
 
   (assert-equal test
     "\"Hello Carp\""
-    &(stringify &(s @"Hello Carp"))
-    "Works with strings")
+    &(stringify (s @"Hello Carp"))
+    "Works with stringifyings")
 
   (assert-equal test
     "\"Hello \\\"Carp\""
-    &(stringify &(s @"Hello \"Carp"))
+    &(stringify (s @"Hello \"Carp"))
     "Works with strings with double quotes in them")
 
   (assert-equal test
     "\"\\\"\\'\\t\\r\\n\\\\\""
-    &(stringify &(s @"\"'\t\r\n\\"))
+    &(stringify (s @"\"'\t\r\n\\"))
     "Works with strings with 'bad' char in them")
 
   (assert-equal test
     "\"\\b\\f\""
-    &(stringify &(s @"\b\f"))
+    &(stringify (s @"\b\f"))
     "Works with strings with backspace and form feed")
 
   (assert-equal test
     "null"
-    &(stringify &(null))
+    &(stringify (null))
     "Works with null")
 
   (assert-equal test
     "[]"
-    &(stringify &(a []))
+    &(stringify (a []))
     "Works with empty arrays")
 
   (assert-equal test
     "[true, 13.37, \"String\", null]"
-    &(stringify &(a [(b true) (n 13.37) (s @"String") (null)]))
+    &(stringify (a [(b true) (n 13.37) (s @"String") (null)]))
     "Works with arrays with things in them")
 
   (assert-equal test
     "{}"
-    &(stringify &(o {}))
+    &(stringify (o {}))
     "Works with empty objects")
 
   (assert-equal test
     "{\"a-key\": \"a value\", \"an other\": 2}"
-    &(stringify &(o {@"a-key" (s @"a value") @"an other" (n 2.0)}))
+    &(stringify (o {@"a-key" (s @"a value") @"an other" (n 2.0)}))
     "Works with objects with things in them")
 
   (assert-equal test
-    "{\"a string\": \"a value\", \"a number\": 1234.56, \"an array\": [1, 2, 3], \"a boolean\": true, \"an object\": {}, \"null\": null}"
+    "{\"a stringifying\": \"a value\", \"a number\": 1234.56, \"an array\": [1, 2, 3], \"a boolean\": true, \"an object\": {}, \"null\": null}"
     &(stringify
-      &(o {@"a string" (s @"a value")
-           @"a number" (n 1234.56)
-           @"an array" (a [(n 1.0) (n 2.0) (n 3.0)])
-           @"a boolean" (b true)
-           @"an object" (o {})
-           @"null" (null)}))
+      (o {@"a stringifying" (s @"a value")
+          @"a number" (n 1234.56)
+          @"an array" (a [(n 1.0) (n 2.0) (n 3.0)])
+          @"a boolean" (b true)
+          @"an object" (o {})
+          @"null" (null)}))
     "All together now"))

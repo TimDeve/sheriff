@@ -17,26 +17,26 @@
   (with Sheriff.JSON.DSL
     (do
      (println* "---DSL---")
-     (println* (stringify &(a [(s @"Hello")
-                               (n 1.0)
-                               (null)])))
+     (println* (stringify (a [(s @"Hello")
+                              (n 1.0)
+                              (null)])))
 
-     (println* (stringify &(a [(a [(s @"Hello")
-                                   (n 1.0)
-                                   (null)])
-                               (a [(s @"Hello")
-                                   (n 1.0)
-                                   (null)])
-                               (a [(s @"Hello")
-                                   (n 3.14)
-                                   (null)])])))
+     (println* (stringify (a [(a [(s @"Hello")
+                                  (n 1.0)
+                                  (null)])
+                              (a [(s @"Hello")
+                                  (n 1.0)
+                                  (null)])
+                              (a [(s @"Hello")
+                                  (n 3.14)
+                                  (null)])])))
 
-     (println* (stringify &(o {@"field-a" (s @"sup")
-                               @"field-b" (null)})))
+     (println* (stringify (o {@"field-a" (s @"sup")
+                              @"field-b" (null)})))
 
-     (println* (stringify &(o {@"field-a" (s @"sup")
-                               @"field-b" (o {@"an-array"
-                                              (a [(n 1.0) (n 2.0) (n 3.0)])})}))))))
+     (println* (stringify (o {@"field-a" (s @"sup")
+                              @"field-b" (o {@"an-array"
+                                             (a [(n 1.0) (n 2.0) (n 3.0)])})}))))))
 
 
 (deftype KvType [keyone Int keytwo String keythree Bool])

@@ -85,7 +85,7 @@
 
     (defndynamic create-arr-for-map [t v]
       (list 'the
-            (list 'Array (list 'Pair 'String 'Sheriff.JSON.DSL.JsonNode))
+            (list 'Array (list 'Pair 'String 'Sheriff.JSON.DSL))
             (cons array
                    (map
                     (Sheriff.JSON.create-pair t v)
@@ -111,7 +111,7 @@
 
     (defndynamic stringify [t v]
       (list 'Sheriff.JSON.DSL.stringify
-            (list 'ref (Sheriff.JSON.to-str t v))))
+            (Sheriff.JSON.to-str t v)))
 
     (defmacro marshall [t v]
       (let [rf (gensym-with 'reference)]
