@@ -1,0 +1,53 @@
+(use Result)
+
+(defmodule Sheriff
+ (defmodule JSON
+  (defmodule Lexer
+    (deftype Token
+     LeftCurly
+     RightCurly
+     LeftBracket
+     RightBracket
+     Colon
+     Comma
+     Null
+     (Str [String])
+     (Bol [String])
+     (Num [String]))
+
+    ;(sig lex-i (Fn [Int (Ref Array Char) (Result (Array Token) String)] (Result (Array Token) String)))
+    (defn lex-i [i chrs res-toks]
+      (with Token
+        (match res-toks
+          (Error e) (Error e)
+          (Success toks)
+          (if (>= i (Array.length chrs))
+            (Success toks)
+            (case @(Array.unsafe-nth chrs i)
+              \{ (lex-i (inc i)
+                        chrs
+                        (the (Result (Array Token) String)
+                         (Success (Array.push-back toks (LeftCurly)))))
+              \} (lex-i (inc i)
+                        chrs
+                        (the (Result (Array Token) String)
+                         (Success (Array.push-back toks (RightCurly)))))
+              \[ (lex-i (inc i)
+                        chrs
+                        (the (Result (Array Token) String)
+                         (Success (Array.push-back toks (LeftBracket)))))
+              \] (lex-i (inc i)
+                        chrs
+                        (the (Result (Array Token) String)
+                         (Success (Array.push-back toks (RightBracket)))))
+             (Error @"Unkwown char"))))))
+
+    (sig lex (Fn [(Ref String)] (Result (Array Token) String)))
+    (defn lex [s]
+     (the (Result (Array Token) String)
+      (let [chrs (chars s)]
+       (lex-i 0
+              &chrs
+              (the (Result (Array Token) String)
+                   (Success [])))))))))
+

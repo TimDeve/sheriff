@@ -1,0 +1,20 @@
+(load "Test.carp")
+
+(load "../sheriff.carp")
+
+(use Test)
+
+(use Sheriff.JSON.Lexer)
+(use Sheriff.JSON.Lexer.Token)
+
+(deftest test
+  (assert-equal test
+    "(Success [(LeftCurly) (RightCurly)])"
+    &(str &(lex "{}"))
+    "Lex curly braces")
+
+  (assert-equal test
+    "(Success [(LeftBracket) (RightBracket)])"
+    &(str &(lex "[]"))
+    "Lex square bracket"))
+
