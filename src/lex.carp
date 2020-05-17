@@ -118,6 +118,10 @@
                             chrs
                             (the (Result (Array Token) String)
                              (Success (Array.push-back toks (Colon)))))
+                  \, (lex-i (inc i)
+                            chrs
+                            (the (Result (Array Token) String)
+                             (Success (Array.push-back toks (Comma)))))
                   \n (if (not (is-null? i chrs))
                        (Error @"Failed to lex null token")
                        (lex-i (+ 4 i)
@@ -125,13 +129,13 @@
                               (the (Result (Array Token) String)
                                (Success (Array.push-back toks (Null))))))
                   \t (if (not (is-true? i chrs))
-                       (Error @"Failed to lex null token")
+                       (Error @"Failed to lex true token")
                        (lex-i (+ 4 i)
                               chrs
                               (the (Result (Array Token) String)
                                (Success (Array.push-back toks (Bol true))))))
                   \f (if (not (is-false? i chrs))
-                       (Error @"Failed to lex null token")
+                       (Error @"Failed to lex false token")
                        (lex-i (+ 5 i)
                               chrs
                               (the (Result (Array Token) String)

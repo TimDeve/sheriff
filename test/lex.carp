@@ -64,7 +64,22 @@
     "with true")
 
   (assert-equal test
+    "(Error @\"Failed to lex true token\")"
+    &(str &(lex "{\"key\": tqwqwe}"))
+    "error when true parsing")
+
+  (assert-equal test
     "(Success [(LeftCurly) (Str @\"key\") (Colon) (Bol false) (RightCurly)])"
     &(str &(lex "{\"key\": false}"))
-    "with false"))
+    "with false")
+
+  (assert-equal test
+    "(Error @\"Failed to lex false token\")"
+    &(str &(lex "{\"key\": fefwe}"))
+    "error when false parsing")
+
+  (assert-equal test
+    "(Success [(LeftCurly) (Str @\"key\") (Colon) (LeftBracket) (Num @\"1e10\") (Comma) (Null) (RightBracket) (RightCurly)])"
+    &(str &(lex "{\"key\": [1e10, null]}"))
+    "All together now"))
 
