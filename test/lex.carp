@@ -31,5 +31,20 @@
   (assert-equal test
     "(Error @\"Unmatched double-quote\")"
     &(str &(lex "\"AAAAAAAAAAA"))
-    "Get error for unclosed double quotes"))
+    "Get error for unclosed double quotes")
+
+  (assert-equal test
+    "(Success [(LeftCurly) (Str @\"key\") (Colon) (Num @\"1.23\")])"
+    &(str &(lex "{\"key\": 1.23}"))
+    "with number")
+
+  (assert-equal test
+    "(Success [(LeftCurly) (Str @\"key\") (Colon) (Num @\"1e10\")])"
+    &(str &(lex "{\"key\": 1e10}"))
+    "with numbers with exponents")
+
+  (assert-equal test
+    "(Error @\"Unexpected end of input\")"
+    &(str &(lex "{\"key\": 1e10"))
+    "Get error for unexpected end of output for number"))
 
