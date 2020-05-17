@@ -16,5 +16,20 @@
   (assert-equal test
     "(Success [(LeftBracket) (RightBracket)])"
     &(str &(lex "[]"))
-    "Lex square bracket"))
+    "Lex square bracket")
+
+  (assert-equal test
+    "(Success [(Str @\"Strong\")])"
+    &(str &(lex "\"Strong\""))
+    "Lex string")
+
+  (assert-equal test
+    "(Success [(LeftCurly) (Str @\"key\") (Colon) (Str @\"value\") (RightCurly)])"
+    &(str &(lex "{\"key\": \"value\"}"))
+    "Lex string kv")
+
+  (assert-equal test
+    "(Error @\"Unmatched double-quote\")"
+    &(str &(lex "\"AAAAAAAAAAA"))
+    "Get error for unclosed double quotes"))
 

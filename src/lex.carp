@@ -15,32 +15,66 @@
      (Bol [String])
      (Num [String]))
 
+    (use Token)
+
+    (defn is-white-space? [char]
+      (StaticArray.any? &(fn [c] (= char c)) $[\space \tab \newline]))
+
+    (defn lex-string [i chrs]
+      (let [error false char-str (the (Array Char) [])]
+        (do
+          (while (< i (Array.length chrs))
+            (do
+             (let [char @(Array.unsafe-nth chrs i)]
+              (if (and (= \" char) (not (= \\ @(Array.unsafe-nth chrs (- i 1)))))
+                (break)
+                (Array.push-back! &char-str char)))
+             (update! i inc)
+             (if (= i (Array.length chrs)) (set! error true) ())))
+          (if error
+            (Error @"Unmatched double-quote")
+            (Success (Pair.init i (Str (String.from-chars &char-str))))))))
+
     ;(sig lex-i (Fn [Int (Ref Array Char) (Result (Array Token) String)] (Result (Array Token) String)))
     (defn lex-i [i chrs res-toks]
-      (with Token
-        (match res-toks
-          (Error e) (Error e)
+      (match res-toks
+        (Error e) (Error e)
+        (Success toks)
+        (if (>= i (Array.length chrs))
           (Success toks)
-          (if (>= i (Array.length chrs))
-            (Success toks)
-            (case @(Array.unsafe-nth chrs i)
-              \{ (lex-i (inc i)
-                        chrs
-                        (the (Result (Array Token) String)
-                         (Success (Array.push-back toks (LeftCurly)))))
-              \} (lex-i (inc i)
-                        chrs
-                        (the (Result (Array Token) String)
-                         (Success (Array.push-back toks (RightCurly)))))
-              \[ (lex-i (inc i)
-                        chrs
-                        (the (Result (Array Token) String)
-                         (Success (Array.push-back toks (LeftBracket)))))
-              \] (lex-i (inc i)
-                        chrs
-                        (the (Result (Array Token) String)
-                         (Success (Array.push-back toks (RightBracket)))))
-             (Error @"Unkwown char"))))))
+          (let [current-char (Array.unsafe-nth chrs i)]
+            (if (is-white-space? current-char)
+              (lex-i (inc i) chrs (the (Result (Array Token) String) (Success toks)))
+              (case @current-char
+                \{ (lex-i (inc i)
+                          chrs
+                          (the (Result (Array Token) String)
+                           (Success (Array.push-back toks (LeftCurly)))))
+                \} (lex-i (inc i)
+                          chrs
+                          (the (Result (Array Token) String)
+                           (Success (Array.push-back toks (RightCurly)))))
+                \[ (lex-i (inc i)
+                          chrs
+                          (the (Result (Array Token) String)
+                           (Success (Array.push-back toks (LeftBracket)))))
+                \] (lex-i (inc i)
+                          chrs
+                          (the (Result (Array Token) String)
+                           (Success (Array.push-back toks (RightBracket)))))
+                \: (lex-i (inc i)
+                          chrs
+                          (the (Result (Array Token) String)
+                           (Success (Array.push-back toks (Colon)))))
+                \" (let [string-pair (lex-string (inc i) chrs)]
+                    (match string-pair
+                      (Error e) (Error e)
+                      (Success pair)
+                      (lex-i (inc @(Pair.a &pair))
+                          chrs
+                          (the (Result (Array Token) String)
+                           (Success (Array.push-back toks @(Pair.b &pair)))))))
+               (Error (String.append "Unexpect char = " &(str @current-char)))))))))
 
     (sig lex (Fn [(Ref String)] (Result (Array Token) String)))
     (defn lex [s]
