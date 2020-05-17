@@ -34,12 +34,12 @@
     "Get error for unclosed double quotes")
 
   (assert-equal test
-    "(Success [(LeftCurly) (Str @\"key\") (Colon) (Num @\"1.23\")])"
+    "(Success [(LeftCurly) (Str @\"key\") (Colon) (Num @\"1.23\") (RightCurly)])"
     &(str &(lex "{\"key\": 1.23}"))
     "with number")
 
   (assert-equal test
-    "(Success [(LeftCurly) (Str @\"key\") (Colon) (Num @\"1e10\")])"
+    "(Success [(LeftCurly) (Str @\"key\") (Colon) (Num @\"1e10\") (RightCurly)])"
     &(str &(lex "{\"key\": 1e10}"))
     "with numbers with exponents")
 
@@ -49,12 +49,22 @@
     "Get error for unexpected end of output for number")
 
   (assert-equal test
-    "(Success [(LeftCurly) (Str @\"key\") (Colon) (Null)])"
+    "(Success [(LeftCurly) (Str @\"key\") (Colon) (Null) (RightCurly)])"
     &(str &(lex "{\"key\": null}"))
     "with null")
 
   (assert-equal test
     "(Error @\"Failed to lex null token\")"
     &(str &(lex "{\"key\": nul}"))
-    "error when null parsing"))
+    "error when null parsing")
+
+  (assert-equal test
+    "(Success [(LeftCurly) (Str @\"key\") (Colon) (Bol true) (RightCurly)])"
+    &(str &(lex "{\"key\": true}"))
+    "with true")
+
+  (assert-equal test
+    "(Success [(LeftCurly) (Str @\"key\") (Colon) (Bol false) (RightCurly)])"
+    &(str &(lex "{\"key\": false}"))
+    "with false"))
 

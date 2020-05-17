@@ -12,7 +12,7 @@
      Comma
      Null
      (Str [String])
-     (Bol [String])
+     (Bol [Bool])
      (Num [String]))
 
     (use Token)
@@ -22,12 +22,30 @@
 
     (defn true? [b] @b)
 
+    ; TODO: Add bound check
     (defn is-null? [i chrs]
       (StaticArray.all? &true?
                         $[(= \n @(Array.unsafe-nth chrs i))
                           (= \u @(Array.unsafe-nth chrs (+ 1 i)))
                           (= \l @(Array.unsafe-nth chrs (+ 2 i)))
                           (= \l @(Array.unsafe-nth chrs (+ 3 i)))]))
+
+    ; TODO: Add bound check
+    (defn is-true? [i chrs]
+      (StaticArray.all? &true?
+                        $[(= \t @(Array.unsafe-nth chrs i))
+                          (= \r @(Array.unsafe-nth chrs (+ 1 i)))
+                          (= \u @(Array.unsafe-nth chrs (+ 2 i)))
+                          (= \e @(Array.unsafe-nth chrs (+ 3 i)))]))
+
+    ; TODO: Add bound check
+    (defn is-false? [i chrs]
+      (StaticArray.all? &true?
+                        $[(= \f @(Array.unsafe-nth chrs i))
+                          (= \a @(Array.unsafe-nth chrs (+ 1 i)))
+                          (= \l @(Array.unsafe-nth chrs (+ 2 i)))
+                          (= \s @(Array.unsafe-nth chrs (+ 3 i)))
+                          (= \e @(Array.unsafe-nth chrs (+ 4 i)))]))
 
     (defn lex-number [i chrs]
       (let [error false char-str (the (Array Char) [])]
@@ -75,7 +93,7 @@
                  (match num-pair
                    (Error e) (Error e)
                    (Success pair)
-                   (lex-i (inc @(Pair.a &pair))
+                   (lex-i @(Pair.a &pair)
                        chrs
                        (the (Result (Array Token) String)
                         (Success (Array.push-back toks @(Pair.b &pair)))))))
@@ -102,10 +120,22 @@
                              (Success (Array.push-back toks (Colon)))))
                   \n (if (not (is-null? i chrs))
                        (Error @"Failed to lex null token")
-                       (lex-i (+ 5 i)
+                       (lex-i (+ 4 i)
                               chrs
                               (the (Result (Array Token) String)
                                (Success (Array.push-back toks (Null))))))
+                  \t (if (not (is-true? i chrs))
+                       (Error @"Failed to lex null token")
+                       (lex-i (+ 4 i)
+                              chrs
+                              (the (Result (Array Token) String)
+                               (Success (Array.push-back toks (Bol true))))))
+                  \f (if (not (is-false? i chrs))
+                       (Error @"Failed to lex null token")
+                       (lex-i (+ 5 i)
+                              chrs
+                              (the (Result (Array Token) String)
+                               (Success (Array.push-back toks (Bol false))))))
                   \" (let [string-pair (lex-string (inc i) chrs)]
                       (match string-pair
                         (Error e) (Error e)
