@@ -46,5 +46,15 @@
   (assert-equal test
     "(Error @\"Unexpected end of input\")"
     &(str &(lex "{\"key\": 1e10"))
-    "Get error for unexpected end of output for number"))
+    "Get error for unexpected end of output for number")
+
+  (assert-equal test
+    "(Success [(LeftCurly) (Str @\"key\") (Colon) (Null)])"
+    &(str &(lex "{\"key\": null}"))
+    "with null")
+
+  (assert-equal test
+    "(Error @\"Failed to lex null token\")"
+    &(str &(lex "{\"key\": nul}"))
+    "error when null parsing"))
 

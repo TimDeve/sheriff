@@ -20,6 +20,15 @@
     (defn is-white-space? [char]
       (StaticArray.any? &(fn [c] (= char c)) $[\space \tab \newline]))
 
+    (defn true? [b] @b)
+
+    (defn is-null? [i chrs]
+      (StaticArray.all? &true?
+                        $[(= \n @(Array.unsafe-nth chrs i))
+                          (= \u @(Array.unsafe-nth chrs (+ 1 i)))
+                          (= \l @(Array.unsafe-nth chrs (+ 2 i)))
+                          (= \l @(Array.unsafe-nth chrs (+ 3 i)))]))
+
     (defn lex-number [i chrs]
       (let [error false char-str (the (Array Char) [])]
         (do
@@ -91,6 +100,12 @@
                             chrs
                             (the (Result (Array Token) String)
                              (Success (Array.push-back toks (Colon)))))
+                  \n (if (not (is-null? i chrs))
+                       (Error @"Failed to lex null token")
+                       (lex-i (+ 5 i)
+                              chrs
+                              (the (Result (Array Token) String)
+                               (Success (Array.push-back toks (Null))))))
                   \" (let [string-pair (lex-string (inc i) chrs)]
                       (match string-pair
                         (Error e) (Error e)
