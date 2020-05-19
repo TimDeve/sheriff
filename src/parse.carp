@@ -1,0 +1,34 @@
+(use Sheriff.JSON.Lexer)
+
+(defmodule Sheriff
+  (deftype JsonNode
+   (Bol [Bool])
+   (Str [String])
+   (Num [Double])
+   (Obj [(Map String Int)])
+   (Arr [(Array Int)])
+   Null)
+
+  (deftype JSON [data (Array JsonNode)])
+
+  (defmodule JSON
+    (defn unsafe-at [json i]
+     (Array.unsafe-nth (data json) i))
+
+    (defn parse [s]
+      (match (Lexer.lex s)
+        (Result.Error err) (Result.Error err)
+        (Result.Success tokens)
+        (match @(Array.unsafe-nth &tokens 0)
+          (Token.Str st) (Result.Success (init [(Sheriff.JsonNode.Str st)]))
+          _ (Result.Error @"Not a String"))))
+
+    (defn get-string [json s]
+      (let [path (String.split-by s &[\.])]
+        (if (not (= 2 (Array.length &path)))
+          (Result.Error @"Bad path")
+          (the (Result String String)
+            (match @(unsafe-at json 0)
+              (Sheriff.JsonNode.Str st) (Result.Success st)
+              _ (Result.Error @"Not a string"))))))))
+

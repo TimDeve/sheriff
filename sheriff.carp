@@ -1,4 +1,5 @@
 (load "src/lex.carp")
+(load "src/parse.carp")
 (load "src/kv.carp")
 (load "src/dsl.carp")
 (load "src/marshall.carp")

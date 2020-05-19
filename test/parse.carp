@@ -1,0 +1,17 @@
+(load "Test.carp")
+
+(load "../sheriff.carp")
+
+(use Test)
+
+(use Sheriff.JSON)
+
+(deftest test
+  (assert-equal test
+    &(Result.Success @"wow")
+    &(Result.and-then
+             (parse "\"wow\"")
+             &(fn [p] (get-string &p ".")))
+
+    "Parses string"))
+
