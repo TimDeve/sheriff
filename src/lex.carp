@@ -15,6 +15,23 @@
      (Bol [Bool])
      (Num [String]))
 
+    (defmodule Token
+     (defn to-int [t]
+      (match-ref t
+       LeftCurly 0
+       RightCurly 1
+       LeftBracket 2
+       RightBracket 3
+       Colon 4
+       Comma 5
+       Null 6
+       (Str _) 7
+       (Bol _) 8
+       (Num _) 9))
+
+     (defn is-a [a b]
+      (Int.= (to-int a) (to-int b))))
+
     (use Token)
 
     (defn is-white-space? [char]
@@ -48,20 +65,18 @@
                           (= \e @(Array.unsafe-nth chrs (+ 4 i)))]))
 
     (defn lex-number [i chrs]
-      (let [error false char-str (the (Array Char) [])]
-        (do
-          (while (< i (Array.length chrs))
-            (do
-             (let [char (the (Ref Char) (Array.unsafe-nth chrs i))]
-              (if (not (StaticArray.any? &(fn [c] (= char c))
-                                         $[\0 \1 \2 \3 \4 \5 \6 \7 \8 \9 \e \.]))
-                (break)
-                (Array.push-back! &char-str @char)))
-             (update! i inc)
-             (if (= i (Array.length chrs)) (set! error true) ())))
-          (if error
-            (Error @"Unexpected end of input")
-            (Success (Pair.init i (Num (String.from-chars &char-str))))))))
+      (let-do [error false char-str (the (Array Char) [])]
+        (while-do (< i (Array.length chrs))
+          (let [char (the (Ref Char) (Array.unsafe-nth chrs i))]
+            (if (not (StaticArray.any? &(fn [c] (= char c))
+                                       $[\0 \1 \2 \3 \4 \5 \6 \7 \8 \9 \e \.]))
+              (break)
+              (Array.push-back! &char-str @char)))
+          (update! i inc)
+          (if (= i (Array.length chrs)) (set! error true) ()))
+        (if error
+          (Error @"Unexpected end of input")
+          (Success (Pair.init i (Num (String.from-chars &char-str)))))))
 
     (defn lex-string [i chrs]
       (let [error false char-str (the (Array Char) [])]

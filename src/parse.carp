@@ -1,4 +1,6 @@
 (use Sheriff.JSON.Lexer)
+(use Maybe)
+(use Result)
 
 (defmodule Sheriff
   (deftype JsonNode
@@ -15,20 +17,82 @@
     (defn unsafe-at [json i]
      (Array.unsafe-nth (data json) i))
 
+    (defn push-jnode! [json node]
+      (do
+       (Array.push-back! (data json) node)
+       (- (Array.length (data json)) 1)))
+
+    (defn put-obj! [json obj-i key node]
+      (let [new-i (push-jnode! json node) maybe-map (unsafe-at json obj-i)]
+        (match-ref maybe-map
+          (Sheriff.JsonNode.Obj m)  (Map.put! m key &new-i)
+          (Sheriff.JsonNode.Str st) ()
+          (Sheriff.JsonNode.Num nu) ()
+          (Sheriff.JsonNode.Bol b)  ()
+          (Sheriff.JsonNode.Arr a)  ()
+          Sheriff.JsonNode.Null     ())))
+
+    (defn parse-object [i toks json]
+      (let-do [error (Nothing) obj-i (push-jnode! json (Sheriff.JsonNode.Obj {}))]
+        (while-do (< i (- (Array.length toks) 3))
+          (let [key (Array.unsafe-nth toks i)
+                colon (Array.unsafe-nth toks (+ i 1))
+                value (Array.unsafe-nth toks (+ i 2))
+                sep (Array.unsafe-nth toks (+ i 3))]
+            (match @colon
+             Token.Colon
+             (match @key
+              (Token.Str key-str)
+              (match @value
+               (Token.Str val-str)
+               (do
+                (put-obj! json obj-i &key-str (Sheriff.JsonNode.Str val-str))
+                (match @sep
+                 (Token.Comma) (set! i (+ i 4))
+                 (Token.RightCurly) (do (set! i (+ i 4)) (break))
+                 _ (do (set! error (Just @"Expected Comma or RightCurly")) (break))))
+               _ (do (set! error (Just @"Expected string value")) (break)))
+              _ (do (set! error (Just @"Expected key")) (break)))
+             _ (do (set! error (Just @"Expected colon")) (break)))))
+        (match error
+          (Nothing)  (Success i)
+          (Just err) (Error err))))
+
+    (defn parse-toks [toks]
+      (let-do [error (Nothing) json (init []) i 0]
+        (while-do (< i (Array.length toks))
+          (match @(Array.unsafe-nth toks i)
+            (Token.Str st) (void (push-jnode! &json (Sheriff.JsonNode.Str st)))
+            Token.LeftCurly
+            (match (parse-object (+ i 1) toks &json)
+              (Success new-i) (set! i new-i)
+              (Error err) (do (set! error (Just err)) (break)))
+            _ (do (set! error (Just @"Not a valid token")) (break)))
+          (set! i (inc i)))
+        (match error
+          (Nothing)  (Success json)
+          (Just err) (Error err))))
+
     (defn parse [s]
       (match (Lexer.lex s)
-        (Result.Error err) (Result.Error err)
-        (Result.Success tokens)
-        (match @(Array.unsafe-nth &tokens 0)
-          (Token.Str st) (Result.Success (init [(Sheriff.JsonNode.Str st)]))
-          _ (Result.Error @"Not a String"))))
+        (Error err) (Error err)
+        (Success tokens) (parse-toks &tokens)))
+
+    (defn get [json s]
+      (let [path (String.split-by s &[\.])
+            index (Array.reduce
+                    &(fn [i path]
+                      (if (= path "")
+                        i
+                        (match @(unsafe-at json i)
+                          (Sheriff.JsonNode.Obj m) (Map.get &m path)
+                          _ 0)))
+                    0
+                    &path)]
+        @(unsafe-at json index)))
 
     (defn get-string [json s]
-      (let [path (String.split-by s &[\.])]
-        (if (not (= 2 (Array.length &path)))
-          (Result.Error @"Bad path")
-          (the (Result String String)
-            (match @(unsafe-at json 0)
-              (Sheriff.JsonNode.Str st) (Result.Success st)
-              _ (Result.Error @"Not a string"))))))))
+      (match (get json s)
+        (Sheriff.JsonNode.Str st) (Success st)
+        _ (Error @"Not a string")))))
 

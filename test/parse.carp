@@ -12,6 +12,19 @@
     &(Result.and-then
              (parse "\"wow\"")
              &(fn [p] (get-string &p ".")))
+    "Parses string")
 
-    "Parses string"))
+  (assert-equal test
+    &(Result.Success @"wow")
+    &(Result.and-then
+             (parse "{\"a-key\": \"wow\"}")
+             &(fn [p] (get-string &p ".a-key")))
+    "Parses string in object")
+
+  (assert-equal test
+    &(Result.Success @"string")
+    &(Result.and-then
+             (parse "{\"a-key\": \"wow\", \"another-key\": \"string\"}")
+             &(fn [p] (get-string &p ".another-key")))
+    "Parses strings in object"))
 
