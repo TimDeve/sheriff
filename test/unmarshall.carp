@@ -1,0 +1,27 @@
+(Debug.sanitize-addresses)
+
+(load "Test.carp")
+
+(load "../sheriff.carp")
+
+(use Test)
+
+(deftype StringsStruct [key-one String keytwo String])
+
+(defmodule StringsStruct
+ (implements = =)
+ (defn = [a b]
+  (and (= (key-one a) (key-one b))
+       (= (keytwo a) (keytwo b)))))
+
+(deftest test
+  (assert-equal test
+    &(Result.Success @"wow")
+    &(Sheriff.JSON.unmarshall String "\"wow\"")
+    "Works with just String")
+
+  (assert-equal test
+    &(Result.Success (StringsStruct.init @"val one" @"val two"))
+    &(Sheriff.JSON.unmarshall StringsStruct "{\"key-one\": \"val one\", \"keytwo\": \"val two\"}")
+    "Works with struct with just Strings"))
+

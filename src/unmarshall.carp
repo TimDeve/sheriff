@@ -1,0 +1,56 @@
+(load "dsl.carp")
+
+(defmodule Sheriff
+  (defmodule JSON
+    (defndynamic create-key-sym [m]
+     (map
+       (fn [pair] (cons (gensym-with (car pair)) pair))
+       m))
+
+    (defndynamic unwrap-it [ms parsed]
+      (fn [hole]
+        (let [sym (car ms)
+              key (cadr ms)
+              type (cddr ms)
+              parsed-val (gensym-with 'parsed)
+              error (gensym-with 'error)]
+          (list 'let
+                (array parsed-val (list 'Sheriff.JSON.get-string
+                                        (list 'ref parsed)
+                                        (String.concat ["." (Symbol.str key)])))
+                (list 'match parsed-val
+                      (list 'Result.Error error) (list 'Result.Error error)
+                      (list 'Result.Success sym) hole)))))
+
+    (defndynamic reduce-that [ms parsed]
+     (reduce (fn [acc y] (fn [hole] (acc ((Sheriff.JSON.unwrap-it y parsed) hole))))
+             (fn [hole] hole)
+             ms))
+
+    (defndynamic build-struct [t ms parsed]
+      ((Sheriff.JSON.reduce-that ms parsed)
+       (list 'Result.Success
+        (cons (Symbol.prefix t 'init)
+              (map (fn [triple] (car triple))
+                   ms)))))
+
+    (defndynamic string-or-struct [t parsed]
+     (if (= 'String t)
+      (list 'Sheriff.JSON.get-string (list 'ref parsed) ".")
+      (Sheriff.JSON.build-struct t (Sheriff.JSON.create-key-sym (members t)) parsed)))
+
+    (defmacro unmarshall [t string]
+      (let [ref-str (gensym-with 'reference)
+            top-parsed (gensym-with 'top-parsed)
+            success (gensym-with 'success)
+            error (gensym-with 'error)]
+        (list (list 'fn []
+               (list 'let (array ref-str string
+                                 top-parsed (list 'Sheriff.JSON.parse ref-str))
+                          (list 'the (list 'Result t 'String)
+                                     (list 'match top-parsed
+                                       (list 'Result.Error error) (list 'Result.Error error)
+                                       (list 'Result.Success success)
+                                       (Sheriff.JSON.string-or-struct t success))))))))))
+
+

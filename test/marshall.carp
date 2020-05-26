@@ -85,8 +85,8 @@
  (assert-equal test
    "{\"key-two\": {\"arr\": [1234.5678], \"dang\": 3.14, \"soom\": \"Carp\", \"nil\": null, \"bam\": false}, \"key-one\": {\"boooo\": true}}"
    &(Sheriff.JSON.marshall Nested &(Nested.init
-                               (ABool.init true)
-                               (All.init false 3.14 @"Carp" [1234.5678] (Maybe.Nothing))))
+                                    (ABool.init true)
+                                    (All.init false 3.14 @"Carp" [1234.5678] (Maybe.Nothing))))
    "Works with nested structs"))
 
 
