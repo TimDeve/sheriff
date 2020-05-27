@@ -2,6 +2,7 @@
 
 (defmodule Sheriff
   (defmodule JSON
+    (defn identity [a] a)
     (defndynamic create-key-sym [m]
      (map
        (fn [pair] (cons (gensym-with (car pair)) pair))
@@ -44,13 +45,13 @@
             top-parsed (gensym-with 'top-parsed)
             success (gensym-with 'success)
             error (gensym-with 'error)]
-        (list (list 'fn []
+        (list 'Sheriff.JSON.identity
                (list 'let (array ref-str string
                                  top-parsed (list 'Sheriff.JSON.parse ref-str))
                           (list 'the (list 'Result t 'String)
                                      (list 'match top-parsed
                                        (list 'Result.Error error) (list 'Result.Error error)
                                        (list 'Result.Success success)
-                                       (Sheriff.JSON.string-or-struct t success))))))))))
+                                       (Sheriff.JSON.string-or-struct t success)))))))))
 
 

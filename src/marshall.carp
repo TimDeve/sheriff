@@ -115,6 +115,5 @@
 
     (defmacro marshall [t v]
       (let [rf (gensym-with 'reference)]
-        (list (list 'fn []
-               (list 'let (array rf (list 'the (list 'Ref t) v))
-                     (Sheriff.JSON.stringify t rf))))))))
+         (list 'let (array rf (list 'the (list 'Ref t) v))
+               (Sheriff.JSON.stringify t rf))))))
