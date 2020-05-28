@@ -2,12 +2,12 @@
 
 (defmodule Sheriff
   (defmodule JSON
-    (defn identity [a] a)
     (defndynamic create-key-sym [m]
      (map
        (fn [pair] (cons (gensym-with (car pair)) pair))
        m))
 
+    ; TODO: Better names...
     (defndynamic unwrap-it [ms parsed]
       (fn [hole]
         (let [sym (car ms)
@@ -23,6 +23,7 @@
                       (list 'Result.Error error) (list 'Result.Error error)
                       (list 'Result.Success sym) hole)))))
 
+    ; TODO: Better names...
     (defndynamic reduce-that [ms parsed]
      (reduce (fn [acc y] (fn [hole] (acc ((Sheriff.JSON.unwrap-it y parsed) hole))))
              (fn [hole] hole)
@@ -35,23 +36,23 @@
               (map (fn [triple] (car triple))
                    ms)))))
 
+    ; TODO: Better names...
     (defndynamic string-or-struct [t parsed]
-     (if (= 'String t)
-      (list 'Sheriff.JSON.get-string (list 'ref parsed) ".")
-      (Sheriff.JSON.build-struct t (Sheriff.JSON.create-key-sym (members t)) parsed)))
+     (if (eval (list 'Introspect.struct? t))
+      (Sheriff.JSON.build-struct t (Sheriff.JSON.create-key-sym (members t)) parsed)
+      (list 'Sheriff.JSON.get-string (list 'ref parsed) ".")))
 
     (defmacro unmarshall [t string]
       (let [ref-str (gensym-with 'reference)
             top-parsed (gensym-with 'top-parsed)
             success (gensym-with 'success)
             error (gensym-with 'error)]
-        (list 'Sheriff.JSON.identity
-               (list 'let (array ref-str string
-                                 top-parsed (list 'Sheriff.JSON.parse ref-str))
-                          (list 'the (list 'Result t 'String)
-                                     (list 'match top-parsed
-                                       (list 'Result.Error error) (list 'Result.Error error)
-                                       (list 'Result.Success success)
-                                       (Sheriff.JSON.string-or-struct t success)))))))))
+           (list 'let (array ref-str string
+                             top-parsed (list 'Sheriff.JSON.parse ref-str))
+                      (list 'the (list 'Result t 'String)
+                                 (list 'match top-parsed
+                                   (list 'Result.Error error) (list 'Result.Error error)
+                                   (list 'Result.Success success)
+                                   (Sheriff.JSON.string-or-struct t success))))))))
 
 
