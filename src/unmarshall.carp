@@ -7,40 +7,40 @@
        (fn [pair] (cons (gensym-with (car pair)) pair))
        m))
 
-    ; TODO: Better names...
-    (defndynamic unwrap-it [ms parsed]
+    (defndynamic try-get-value-for-key [ms parsed path]
       (fn [hole]
         (let [sym (car ms)
               key (cadr ms)
-              type (cddr ms)
+              typ (caddr ms)
               parsed-val (gensym-with 'parsed)
               error (gensym-with 'error)]
           (list 'let
-                (array parsed-val (list 'Sheriff.JSON.get-string
-                                        (list 'ref parsed)
-                                        (String.concat ["." (Symbol.str key)])))
+                (array parsed-val (Sheriff.JSON.get-value
+                                        typ
+                                        parsed
+                                        (String.concat [path "." (Symbol.str key)])))
                 (list 'match parsed-val
                       (list 'Result.Error error) (list 'Result.Error error)
                       (list 'Result.Success sym) hole)))))
 
-    ; TODO: Better names...
-    (defndynamic reduce-that [ms parsed]
-     (reduce (fn [acc y] (fn [hole] (acc ((Sheriff.JSON.unwrap-it y parsed) hole))))
+    (defndynamic try-get-values-for-struct [ms parsed path]
+     (reduce (fn [acc y] (fn [hole] (acc ((Sheriff.JSON.try-get-value-for-key y parsed path) hole))))
              (fn [hole] hole)
              ms))
 
-    (defndynamic build-struct [t ms parsed]
-      ((Sheriff.JSON.reduce-that ms parsed)
+    (defndynamic build-struct [t ms parsed path]
+      ((Sheriff.JSON.try-get-values-for-struct ms parsed path)
        (list 'Result.Success
         (cons (Symbol.prefix t 'init)
               (map (fn [triple] (car triple))
                    ms)))))
 
-    ; TODO: Better names...
-    (defndynamic string-or-struct [t parsed]
-     (if (eval (list 'Introspect.struct? t))
-      (Sheriff.JSON.build-struct t (Sheriff.JSON.create-key-sym (members t)) parsed)
-      (list 'Sheriff.JSON.get-string (list 'ref parsed) ".")))
+    (defndynamic get-value [t parsed path]
+     (if (Introspect.struct? (eval t))
+      (Sheriff.JSON.build-struct t (Sheriff.JSON.create-key-sym (members t)) parsed path)
+      (if (= t 'String)
+        (list 'Sheriff.JSON.get-string (list 'ref parsed) path)
+        (macro-error "Only String are supported to unmarshall"))))
 
     (defmacro unmarshall [t string]
       (let [ref-str (gensym-with 'reference)
@@ -53,6 +53,6 @@
                                  (list 'match top-parsed
                                    (list 'Result.Error error) (list 'Result.Error error)
                                    (list 'Result.Success success)
-                                   (Sheriff.JSON.string-or-struct t success))))))))
+                                   (Sheriff.JSON.get-value t success ""))))))))
 
 
