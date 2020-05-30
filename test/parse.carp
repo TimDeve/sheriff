@@ -15,6 +15,13 @@
     "Parses string")
 
   (assert-equal test
+    &(Result.Success 1.0)
+    &(Result.and-then
+             (parse "1")
+             &(fn [p] (get-number &p ".")))
+    "Parses number")
+
+  (assert-equal test
     &(Result.Success @"wow")
     &(Result.and-then
              (parse "{\"a-key\": \"wow\"}")

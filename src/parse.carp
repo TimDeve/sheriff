@@ -94,5 +94,10 @@
     (defn get-string [json s]
       (match (get json s)
         (Sheriff.JsonNode.Str st) (Success st)
-        _ (Error @"Not a string")))))
+        _ (Error @"Not a string")))
+
+    (defn get-number [json s]
+      (match (get json s)
+        (Sheriff.JsonNode.Num num) (Success num)
+        _ (Error @"Not a number")))))
 
