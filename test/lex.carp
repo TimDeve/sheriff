@@ -24,6 +24,11 @@
     "Lex string")
 
   (assert-equal test
+    "(Success [(Num @\"1\")])"
+    &(str &(lex "1"))
+    "Lex numbers by themselves")
+
+  (assert-equal test
     "(Success [(LeftCurly) (Str @\"key\") (Colon) (Str @\"value\") (RightCurly)])"
     &(str &(lex "{\"key\": \"value\"}"))
     "Lex string kv")
@@ -44,9 +49,9 @@
     "with numbers with exponents")
 
   (assert-equal test
-    "(Error @\"Unexpected end of input\")"
+    "(Success [(LeftCurly) (Str @\"key\") (Colon) (Num @\"1e10\")])"
     &(str &(lex "{\"key\": 1e10"))
-    "Get error for unexpected end of output for number")
+    "Stops when lexing number and end of string")
 
   (assert-equal test
     "(Success [(LeftCurly) (Str @\"key\") (Colon) (Null) (RightCurly)])"

@@ -15,11 +15,60 @@
     "Parses string")
 
   (assert-equal test
-    &(Result.Success 1.0)
+    &(Result.Error @"Value at '.' is not a string")
     &(Result.and-then
              (parse "1")
+             &(fn [p] (get-string &p ".")))
+    "Returns error if trying to get a string where there is another type")
+
+  (assert-equal test
+    &(Result.Success 1234.0)
+    &(Result.and-then
+             (parse "1234")
              &(fn [p] (get-number &p ".")))
     "Parses number")
+
+  (assert-equal test
+    &(Result.Success 3.14)
+    &(Result.and-then
+             (parse "3.14")
+             &(fn [p] (get-number &p ".")))
+    "Parses number with decimals")
+
+  (assert-equal test
+    &(Result.Error @"Number not a valid double")
+    &(Result.and-then
+             (parse "3..14")
+             &(fn [p] (get-number &p ".")))
+    "Errors when parsing invalid number")
+
+  (assert-equal test
+    &(Result.Error @"Value at '.' is not a number")
+    &(Result.and-then
+             (parse "\"wow\"")
+             &(fn [p] (get-number &p ".")))
+    "Returns error if trying to get a number where there is another type")
+
+  (assert-equal test
+    &(Result.Success true)
+    &(Result.and-then
+             (parse "true")
+             &(fn [p] (get-bool &p ".")))
+    "Parses true")
+
+  (assert-equal test
+    &(Result.Success false)
+    &(Result.and-then
+             (parse "false")
+             &(fn [p] (get-bool &p ".")))
+    "Parses false")
+
+  (assert-equal test
+    &(Result.Error @"Value at '.' is not a boolean")
+    &(Result.and-then
+             (parse "\"wow\"")
+             &(fn [p] (get-bool &p ".")))
+    "Returns error if trying to get a bool where there is another type")
 
   (assert-equal test
     &(Result.Success @"wow")
@@ -33,5 +82,26 @@
     &(Result.and-then
              (parse "{\"a-key\": \"wow\", \"another-key\": \"string\"}")
              &(fn [p] (get-string &p ".another-key")))
-    "Parses strings in object"))
+    "Parses strings in object")
+
+  (assert-equal test
+    &(Result.Success 3.14)
+    &(Result.and-then
+             (parse "{\"a-key\": 3.14, \"another-key\": \"string\"}")
+             &(fn [p] (get-number &p ".a-key")))
+    "Parses number in object")
+
+  (assert-equal test
+    &(Result.Error @"Number not a valid double")
+    &(Result.and-then
+             (parse "{\"a-key\": 3..14, \"another-key\": \"string\"}")
+             &(fn [p] (get-number &p ".a-key")))
+    "Errors parsing invalid number in object")
+
+  (assert-equal test
+    &(Result.Success false)
+    &(Result.and-then
+             (parse "{\"a-key\": false, \"another-key\": \"string\"}")
+             &(fn [p] (get-bool &p ".a-key")))
+    "Parses bool in object"))
 

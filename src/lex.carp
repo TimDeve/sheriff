@@ -72,8 +72,7 @@
                                        $[\0 \1 \2 \3 \4 \5 \6 \7 \8 \9 \e \.]))
               (break)
               (Array.push-back! &char-str @char)))
-          (update! i inc)
-          (if (= i (Array.length chrs)) (set! error true) ()))
+          (update! i inc))
         (if error
           (Error @"Unexpected end of input")
           (Success (Pair.init i (Num (String.from-chars &char-str)))))))

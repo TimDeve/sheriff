@@ -43,15 +43,19 @@
              Token.Colon
              (match @key
               (Token.Str key-str)
-              (match @value
-               (Token.Str val-str)
-               (do
-                (put-obj! json obj-i &key-str (Sheriff.JsonNode.Str val-str))
+              (do
+                (match @value
+                 (Token.Str val-str) (put-obj! json obj-i &key-str (Sheriff.JsonNode.Str val-str))
+                 (Token.Bol bol) (put-obj! json obj-i &key-str (Sheriff.JsonNode.Bol bol))
+                 (Token.Num num-str)
+                 (match (Double.from-string &num-str)
+                   (Just num)(put-obj! json obj-i &key-str (Sheriff.JsonNode.Num num)) 
+                   (Nothing) (do (set! error (Just @"Number not a valid double")) (break)))
+                 _ (do (set! error (Just @"Unexpected token in value")) (break)))
                 (match @sep
                  (Token.Comma) (set! i (+ i 4))
                  (Token.RightCurly) (do (set! i (+ i 4)) (break))
                  _ (do (set! error (Just @"Expected Comma or RightCurly")) (break))))
-               _ (do (set! error (Just @"Expected string value")) (break)))
               _ (do (set! error (Just @"Expected key")) (break)))
              _ (do (set! error (Just @"Expected colon")) (break)))))
         (match error
@@ -63,6 +67,11 @@
         (while-do (< i (Array.length toks))
           (match @(Array.unsafe-nth toks i)
             (Token.Str st) (void (push-jnode! &json (Sheriff.JsonNode.Str st)))
+            (Token.Num num-str)
+            (match (Double.from-string &num-str)
+              (Just num) (void (push-jnode! &json (Sheriff.JsonNode.Num num)))
+              (Nothing) (do (set! error (Just @"Number not a valid double")) (break)))
+            (Token.Bol boo) (void (push-jnode! &json (Sheriff.JsonNode.Bol boo)))
             Token.LeftCurly
             (match (parse-object (+ i 1) toks &json)
               (Success new-i) (set! i new-i)
@@ -94,10 +103,15 @@
     (defn get-string [json s]
       (match (get json s)
         (Sheriff.JsonNode.Str st) (Success st)
-        _ (Error @"Not a string")))
+        _ (Error (format "Value at '%s' is not a string" s))))
 
     (defn get-number [json s]
       (match (get json s)
         (Sheriff.JsonNode.Num num) (Success num)
-        _ (Error @"Not a number")))))
+        _ (Error (format "Value at '%s' is not a number" s))))
+
+    (defn get-bool [json s]
+      (match (get json s)
+        (Sheriff.JsonNode.Bol b) (Success b)
+        _ (Error (format "Value at '%s' is not a boolean" s))))))
 
