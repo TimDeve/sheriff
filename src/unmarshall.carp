@@ -38,9 +38,13 @@
     (defndynamic get-value [t parsed path]
      (if (Introspect.struct? (eval t))
       (Sheriff.JSON.build-struct t (Sheriff.JSON.create-key-sym (members t)) parsed path)
-      (if (= t 'String)
-        (list 'Sheriff.JSON.get-string (list 'ref parsed) path)
-        (macro-error "Only String are supported to unmarshall"))))
+      (if (list? t)
+        (macro-error (String.concat [(str t) " is not supported by unmarshall"]))
+        (case t
+          'String (list 'Sheriff.JSON.get-string (list 'ref parsed) path)
+          'Bool (list 'Sheriff.JSON.get-bool (list 'ref parsed) path)
+          'Double (list 'Sheriff.JSON.get-number (list 'ref parsed) path)
+          (macro-error (String.concat [(str t) " is not supported by unmarshall"]))))))
 
     (defmacro unmarshall [t string]
       (let [ref-str (gensym-with 'reference)

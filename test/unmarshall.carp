@@ -7,12 +7,23 @@
 (use Test)
 
 (deftype StringsStruct [key-one String keytwo String])
-
 (defmodule StringsStruct
  (implements = =)
  (defn = [a b]
   (and (= (key-one a) (key-one b))
        (= (keytwo a) (keytwo b)))))
+
+(deftype BoolStruct [key-one Bool])
+(defmodule BoolStruct
+ (implements = =)
+ (defn = [a b]
+  (= (key-one a) (key-one b))))
+
+(deftype NumberStruct [key-one Double])
+(defmodule NumberStruct
+ (implements = =)
+ (defn = [a b]
+  (= (key-one a) (key-one b))))
 
 (deftest test
   (assert-equal test
@@ -21,7 +32,27 @@
     "Works with just String")
 
   (assert-equal test
+    &(Result.Success true)
+    &(Sheriff.JSON.unmarshall Bool "true")
+    "Works with just Bool")
+
+  (assert-equal test
+    &(Result.Success 12.34)
+    &(Sheriff.JSON.unmarshall Double "12.34")
+    "Works with just Double")
+
+  (assert-equal test
     &(Result.Success (StringsStruct.init @"val one" @"val two"))
     &(Sheriff.JSON.unmarshall StringsStruct "{\"key-one\": \"val one\", \"keytwo\": \"val two\"}")
-    "Works with struct with just Strings"))
+    "Works with struct with just Strings")
+
+  (assert-equal test
+    &(Result.Success (BoolStruct.init false))
+    &(Sheriff.JSON.unmarshall BoolStruct "{\"key-one\": false}")
+    "Works with struct with bool")
+
+  (assert-equal test
+    &(Result.Success (NumberStruct.init 1234.5678))
+    &(Sheriff.JSON.unmarshall NumberStruct "{\"key-one\": 1234.5678}")
+    "Works with struct with bool"))
 

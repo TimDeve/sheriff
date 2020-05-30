@@ -34,7 +34,8 @@
 
     (defn parse-object [i toks json]
       (let-do [error (Nothing) obj-i (push-jnode! json (Sheriff.JsonNode.Obj {}))]
-        (while-do (< i (- (Array.length toks) 3))
+        (while-do (and (< i (- (Array.length toks) 3))
+                       (not (just? &error)))
           (let [key (Array.unsafe-nth toks i)
                 colon (Array.unsafe-nth toks (+ i 1))
                 value (Array.unsafe-nth toks (+ i 2))
@@ -49,34 +50,36 @@
                  (Token.Bol bol) (put-obj! json obj-i &key-str (Sheriff.JsonNode.Bol bol))
                  (Token.Num num-str)
                  (match (Double.from-string &num-str)
-                   (Just num)(put-obj! json obj-i &key-str (Sheriff.JsonNode.Num num)) 
-                   (Nothing) (do (set! error (Just @"Number not a valid double")) (break)))
-                 _ (do (set! error (Just @"Unexpected token in value")) (break)))
+                   (Just num)(put-obj! json obj-i &key-str (Sheriff.JsonNode.Num num))
+                   (Nothing) (set! error (Just @"Number not a valid double")))
+                 _ (set! error (Just @"Unexpected token in value")))
+               (unless (just? &error)
                 (match @sep
                  (Token.Comma) (set! i (+ i 4))
-                 (Token.RightCurly) (do (set! i (+ i 4)) (break))
-                 _ (do (set! error (Just @"Expected Comma or RightCurly")) (break))))
-              _ (do (set! error (Just @"Expected key")) (break)))
-             _ (do (set! error (Just @"Expected colon")) (break)))))
+                 (Token.RightCurly) (set! i (+ i 4)) 
+                 _ (set! error (Just @"Expected Comma or RightCurly")))))
+              _ (set! error (Just @"Expected key")))
+             _ (set! error (Just @"Expected colon")))))
         (match error
           (Nothing)  (Success i)
           (Just err) (Error err))))
 
     (defn parse-toks [toks]
       (let-do [error (Nothing) json (init []) i 0]
-        (while-do (< i (Array.length toks))
+        (while-do (and (< i (Array.length toks))
+                       (not (just? &error)))
           (match @(Array.unsafe-nth toks i)
             (Token.Str st) (void (push-jnode! &json (Sheriff.JsonNode.Str st)))
             (Token.Num num-str)
             (match (Double.from-string &num-str)
               (Just num) (void (push-jnode! &json (Sheriff.JsonNode.Num num)))
-              (Nothing) (do (set! error (Just @"Number not a valid double")) (break)))
+              (Nothing) (set! error (Just @"Number not a valid double")))
             (Token.Bol boo) (void (push-jnode! &json (Sheriff.JsonNode.Bol boo)))
             Token.LeftCurly
             (match (parse-object (+ i 1) toks &json)
               (Success new-i) (set! i new-i)
-              (Error err) (do (set! error (Just err)) (break)))
-            _ (do (set! error (Just @"Not a valid token")) (break)))
+              (Error err) (set! error (Just err)))
+            _ (set! error (Just @"Not a valid token")))
           (set! i (inc i)))
         (match error
           (Nothing)  (Success json)
