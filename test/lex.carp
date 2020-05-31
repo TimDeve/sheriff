@@ -14,6 +14,11 @@
     "Lex curly braces")
 
   (assert-equal test
+    "(Success [(LeftCurly) (RightCurly)])"
+    &(str &(lex "{ \n\t\r}"))
+    "Skips whitespace")
+
+  (assert-equal test
     "(Success [(LeftBracket) (RightBracket)])"
     &(str &(lex "[]"))
     "Lex square bracket")

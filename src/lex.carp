@@ -35,7 +35,7 @@
     (use Token)
 
     (defn is-white-space? [char]
-      (StaticArray.any? &(fn [c] (= char c)) $[\space \tab \newline]))
+      (StaticArray.any? &(fn [c] (= char c)) $[\space \tab \newline \return]))
 
     (defn true? [b] @b)
 
