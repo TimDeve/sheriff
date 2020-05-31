@@ -1,11 +1,10 @@
-pre-push: tests run-example
+.PHONY: pre-push run-example test
+
+pre-push: test run-example
 
 run-example:
 	carp -x example.carp
 
-tests:
+test:
 	./test.sh
-
-test-watch:
-	npx nodemon -e carp -x ./test.sh
 

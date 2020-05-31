@@ -39,30 +39,33 @@
 
     (defn true? [b] @b)
 
-    ; TODO: Add bound check
     (defn is-null? [i chrs]
-      (StaticArray.all? &true?
-                        $[(= \n @(Array.unsafe-nth chrs i))
-                          (= \u @(Array.unsafe-nth chrs (+ 1 i)))
-                          (= \l @(Array.unsafe-nth chrs (+ 2 i)))
-                          (= \l @(Array.unsafe-nth chrs (+ 3 i)))]))
+      (if (< (+ i 3) (Array.length chrs))
+        (StaticArray.all? &true?
+                          $[(= \n @(Array.unsafe-nth chrs i))
+                            (= \u @(Array.unsafe-nth chrs (+ 1 i)))
+                            (= \l @(Array.unsafe-nth chrs (+ 2 i)))
+                            (= \l @(Array.unsafe-nth chrs (+ 3 i)))])
+        false))
 
-    ; TODO: Add bound check
     (defn is-true? [i chrs]
-      (StaticArray.all? &true?
-                        $[(= \t @(Array.unsafe-nth chrs i))
-                          (= \r @(Array.unsafe-nth chrs (+ 1 i)))
-                          (= \u @(Array.unsafe-nth chrs (+ 2 i)))
-                          (= \e @(Array.unsafe-nth chrs (+ 3 i)))]))
+      (if (< (+ i 3) (Array.length chrs))
+        (StaticArray.all? &true?
+                          $[(= \t @(Array.unsafe-nth chrs i))
+                            (= \r @(Array.unsafe-nth chrs (+ 1 i)))
+                            (= \u @(Array.unsafe-nth chrs (+ 2 i)))
+                            (= \e @(Array.unsafe-nth chrs (+ 3 i)))])
+        false))
 
-    ; TODO: Add bound check
     (defn is-false? [i chrs]
-      (StaticArray.all? &true?
-                        $[(= \f @(Array.unsafe-nth chrs i))
-                          (= \a @(Array.unsafe-nth chrs (+ 1 i)))
-                          (= \l @(Array.unsafe-nth chrs (+ 2 i)))
-                          (= \s @(Array.unsafe-nth chrs (+ 3 i)))
-                          (= \e @(Array.unsafe-nth chrs (+ 4 i)))]))
+      (if (< (+ i 4) (Array.length chrs))
+        (StaticArray.all? &true?
+                          $[(= \f @(Array.unsafe-nth chrs i))
+                            (= \a @(Array.unsafe-nth chrs (+ 1 i)))
+                            (= \l @(Array.unsafe-nth chrs (+ 2 i)))
+                            (= \s @(Array.unsafe-nth chrs (+ 3 i)))
+                            (= \e @(Array.unsafe-nth chrs (+ 4 i)))])
+        false))
 
     (defn lex-number [i chrs]
       (let-do [done false char-str (the (Array Char) [])]

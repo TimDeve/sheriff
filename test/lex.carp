@@ -64,6 +64,11 @@
     "error when null parsing")
 
   (assert-equal test
+    "(Error @\"Failed to lex null token\")"
+    &(str &(lex "{\"key\": nu}"))
+    "error when null parsing, too short")
+
+  (assert-equal test
     "(Success [(LeftCurly) (Str @\"key\") (Colon) (Bol true) (RightCurly)])"
     &(str &(lex "{\"key\": true}"))
     "with true")
@@ -74,6 +79,11 @@
     "error when true parsing")
 
   (assert-equal test
+    "(Error @\"Failed to lex true token\")"
+    &(str &(lex "{\"key\": tr}"))
+    "error when true parsing, too short")
+
+  (assert-equal test
     "(Success [(LeftCurly) (Str @\"key\") (Colon) (Bol false) (RightCurly)])"
     &(str &(lex "{\"key\": false}"))
     "with false")
@@ -82,6 +92,11 @@
     "(Error @\"Failed to lex false token\")"
     &(str &(lex "{\"key\": fefwe}"))
     "error when false parsing")
+
+  (assert-equal test
+    "(Error @\"Failed to lex false token\")"
+    &(str &(lex "{\"key\": fa}"))
+    "error when false parsing, too short")
 
   (assert-equal test
     "(Success [(LeftCurly) (Str @\"key\") (Colon) (LeftBracket) (Num @\"1e10\") (Comma) (Null) (RightBracket) (RightCurly)])"
