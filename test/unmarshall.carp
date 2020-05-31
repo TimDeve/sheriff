@@ -6,6 +6,15 @@
 
 (use Test)
 
+(deftype AllStruct [st String bol Bool deci Double num Double])
+(defmodule AllStruct
+ (implements = =)
+ (defn = [a b]
+  (and (= (st a) (st b))
+       (and (= (bol a) (bol b))
+            (and (= (deci a) (deci b))
+                 (= (num a) (num b)))))))
+
 (deftype StringsStruct [key-one String keytwo String])
 (defmodule StringsStruct
  (implements = =)
@@ -54,5 +63,10 @@
   (assert-equal test
     &(Result.Success (NumberStruct.init 1234.5678))
     &(Sheriff.JSON.unmarshall NumberStruct "{\"key-one\": 1234.5678}")
-    "Works with struct with bool"))
+    "Works with struct with bool")
+
+  (assert-equal test
+    &(Result.Success (AllStruct.init @"Hello Hello" false 1234.5678 42.0))
+    &(Sheriff.JSON.unmarshall AllStruct "{\"st\": \"Hello Hello\", \"num\": 42, \"deci\": 1234.5678, \"bol\": false}")
+    "Works with struct with all supported types"))
 
