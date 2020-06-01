@@ -9,13 +9,14 @@
 (deftype ABool [boooo Bool])
 (deftype ADouble [val Double])
 (deftype AString [sam String])
-(deftype All [bam Bool 
-              dang Double 
-              soom String 
-              arr (Array Double) 
-              nil (Maybe String)])
+(deftype All [bam Bool
+              dang Double
+              soom String
+              arr (Array Double)
+              nil (Maybe String)
+              int Int])
 
-(deftype Nested [key-one ABool key-two All])
+(deftype Nested [key-one ABool key-two ADouble])
 
 (deftest test
   (assert-equal test
@@ -24,9 +25,14 @@
     "Works with just Bool")
 
   (assert-equal test
-    "1"
-    &(Sheriff.JSON.marshall Double &1.00)
+    "3.14"
+    &(Sheriff.JSON.marshall Double &3.14)
     "Works with just Double")
+
+  (assert-equal test
+    "42"
+    &(Sheriff.JSON.marshall Int &42)
+    "Works with just Int")
 
   (assert-equal test
     "\"Sup\""
@@ -74,18 +80,19 @@
    "Works with String")
 
  (assert-equal test
-   "{\"arr\": [1, 2], \"dang\": 3.14, \"soom\": \"Carp\", \"nil\": \"maybe\", \"bam\": false}"
+   "{\"arr\": [1, 2], \"int\": 42, \"dang\": 3.14, \"soom\": \"Carp\", \"nil\": \"maybe\", \"bam\": false}"
    &((fn [] (Sheriff.JSON.marshall All &(All.init false
                                                   3.14
                                                   @"Carp"
                                                   [1.0, 2.0]
-                                                  (Maybe.Just @"maybe")))))
+                                                  (Maybe.Just @"maybe")
+                                                  42))))
    "All together now")
 
  (assert-equal test
-   "{\"key-two\": {\"arr\": [1234.5678], \"dang\": 3.14, \"soom\": \"Carp\", \"nil\": null, \"bam\": false}, \"key-one\": {\"boooo\": true}}"
+   "{\"key-two\": {\"val\": 14.44}, \"key-one\": {\"boooo\": true}}"
    &((fn [] (Sheriff.JSON.marshall Nested &(Nested.init
                                             (ABool.init true)
-                                            (All.init false 3.14 @"Carp" [1234.5678] (Maybe.Nothing))))))
+                                            (ADouble.init 14.44)))))
    "Works with nested structs"))
 

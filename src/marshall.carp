@@ -21,50 +21,18 @@
     (defndynamic not-supported-message [t]
       (macro-error (String.concat [(str t) " are not allowed in struct to marshall"])))
 
-    (defndynamic not-supported? [t]
+    (defndynamic supported? [t]
       (if (list? t)
-        (and (not (Sheriff.JSON.is-array-type? t)) 
-             (not (Sheriff.JSON.is-maybe-type? t)))
-        (any? (fn [x] (= t x)) '(Maybe
-                                 Result
-                                 RefBool
-                                 Byte
-                                 ByteRef
-                                 Int
-                                 IntRef
-                                 Long
-                                 DoubleRef
-                                 Float
-                                 FloatRef
-                                 PairRef
-                                 Pair
-                                 StaticArray
-                                 Array
-                                 Char
-                                 CharRef
-                                 StringCopy
-                                 Int8
-                                 Int8Extra
-                                 Int16
-                                 Int16Extra
-                                 Int32
-                                 Int32Extra
-                                 Int64
-                                 Int64Extra
-                                 Uint8
-                                 Uint8Extra
-                                 Uint16
-                                 Uint16Extra
-                                 Uint32
-                                 Uint32Extra
-                                 Uint64
-                                 Uint64Extra
-                                 Pattern
-                                 Map
-                                 Set))))
+        (or (Sheriff.JSON.is-array-type? t)
+            (Sheriff.JSON.is-maybe-type? t))
+        (or (Introspect.struct? (eval t))
+            (any? (fn [x] (= t x)) '(Double
+                                     Int
+                                     String
+                                     Bool)))))
 
     (defndynamic to-str [t v]
-      (if (Sheriff.JSON.not-supported? t)
+      (if (not (Sheriff.JSON.supported? t))
           (Sheriff.JSON.not-supported-message t)
           (if (Sheriff.JSON.is-array-type? t)
             (Sheriff.JSON.arr t v)
@@ -72,6 +40,7 @@
               (Sheriff.JSON.maybe t v)
               (case t
                 'Double (list 'Sheriff.JSON.DSL.n (list 'copy v))
+                'Int (list 'Sheriff.JSON.DSL.n (list 'Double.from-int (list 'copy v)))
                 'String (list 'Sheriff.JSON.DSL.s (list 'copy v))
                 'Bool (list 'Sheriff.JSON.DSL.b (list 'copy v))
                 (Sheriff.JSON.object t v))))))

@@ -44,6 +44,9 @@
           'String (list 'Sheriff.JSON.get-string (list 'ref parsed) path)
           'Bool (list 'Sheriff.JSON.get-bool (list 'ref parsed) path)
           'Double (list 'Sheriff.JSON.get-number (list 'ref parsed) path)
+          'Int (list 'Result.map
+                 (list 'Sheriff.JSON.get-number (list 'ref parsed) path)
+                 (list 'ref 'Double.to-int))
           (macro-error (String.concat [(str t) " is not supported by unmarshall"]))))))
 
     (defmacro unmarshall [t string]
