@@ -99,7 +99,7 @@
     (defndynamic arr [t v]
      (let [map-fn (list 'fn (array 'x)
                       (Sheriff.JSON.to-str (Sheriff.JSON.get-array-type t) 'x))]
-          (list 'Sheriff.JSON.DSL.a 
+          (list 'Sheriff.JSON.DSL.a
                 (list 'Array.copy-map (list 'ref map-fn)
                                       v))))
 

@@ -51,12 +51,12 @@
             top-parsed (gensym-with 'top-parsed)
             success (gensym-with 'success)
             error (gensym-with 'error)]
-           (list 'let (array ref-str string
-                             top-parsed (list 'Sheriff.JSON.parse ref-str))
-                      (list 'the (list 'Result t 'String)
-                                 (list 'match top-parsed
-                                   (list 'Result.Error error) (list 'Result.Error error)
-                                   (list 'Result.Success success)
-                                   (Sheriff.JSON.get-value t success ""))))))))
+        (list (list 'fn [ref-str]
+                (list 'the (list 'Result t 'String)
+                           (list 'match (list 'Sheriff.JSON.parse ref-str)
+                             (list 'Result.Error error) (list 'Result.Error error)
+                             (list 'Result.Success success)
+                             (Sheriff.JSON.get-value t success ""))))
+              string)))))
 
 
