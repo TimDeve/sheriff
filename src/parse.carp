@@ -46,6 +46,7 @@
               (Token.Str key-str)
               (do
                 (match @value
+                 Token.Null (put-obj! json obj-i &key-str (Sheriff.JsonNode.Null))
                  (Token.Str val-str) (put-obj! json obj-i &key-str (Sheriff.JsonNode.Str val-str))
                  (Token.Bol bol) (put-obj! json obj-i &key-str (Sheriff.JsonNode.Bol bol))
                  (Token.Num num-str)
@@ -69,6 +70,7 @@
         (while-do (and (< i (Array.length toks))
                        (not (just? &error)))
           (match @(Array.unsafe-nth toks i)
+            Token.Null (void (push-jnode! &json (Sheriff.JsonNode.Null)))
             (Token.Str st) (void (push-jnode! &json (Sheriff.JsonNode.Str st)))
             (Token.Num num-str)
             (match (Double.from-string &num-str)
@@ -108,13 +110,31 @@
         (Sheriff.JsonNode.Str st) (Success st)
         _ (Error (format "Value at '%s' is not a string" s))))
 
+    (defn get-maybe-string [json s]
+      (match (get json s)
+        (Sheriff.JsonNode.Str st) (Success (Maybe.Just st))
+        Sheriff.JsonNode.Null (Success (Maybe.Nothing))
+        _ (Error (format "Value at '%s' is not a string or null" s))))
+
     (defn get-number [json s]
       (match (get json s)
         (Sheriff.JsonNode.Num num) (Success num)
         _ (Error (format "Value at '%s' is not a number" s))))
 
+    (defn get-maybe-number [json s]
+      (match (get json s)
+        (Sheriff.JsonNode.Num num) (Success (Maybe.Just num))
+        Sheriff.JsonNode.Null (Success (Maybe.Nothing))
+        _ (Error (format "Value at '%s' is not a number or null" s))))
+
     (defn get-bool [json s]
       (match (get json s)
         (Sheriff.JsonNode.Bol b) (Success b)
-        _ (Error (format "Value at '%s' is not a boolean" s))))))
+        _ (Error (format "Value at '%s' is not a boolean" s))))
+
+    (defn get-maybe-bool [json s]
+      (match (get json s)
+        (Sheriff.JsonNode.Bol b) (Success (Maybe.Just b))
+        Sheriff.JsonNode.Null (Success (Maybe.Nothing))
+        _ (Error (format "Value at '%s' is not a boolean or null" s))))))
 
