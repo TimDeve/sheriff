@@ -2,6 +2,20 @@
 
 (defmodule Sheriff
   (defmodule JSON
+    (defndynamic make-array [lst]
+      (let [arr (gensym-with 'arr)]
+       (list 'let
+             (array arr (list 'Array.zero))
+             (cons-last
+               arr
+               (cons
+                 'do
+                 (map (fn [item]
+                          (list 'Array.push-back!
+                                (list 'ref arr)
+                                item))
+                      lst))))))
+
     (defndynamic is-array-type? [t]
       (if (and (list? t) (not (empty? t)))
         (= 'Array (car t))
@@ -55,7 +69,7 @@
     (defndynamic create-arr-for-map [t v]
       (list 'the
             (list 'Array (list 'Pair 'String 'Sheriff.JSON.DSL))
-            (cons array
+            (Sheriff.JSON.make-array
                    (map
                     (Sheriff.JSON.create-pair t v)
                     (members t)))))
