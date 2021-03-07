@@ -1,6 +1,6 @@
 (load "Test.carp")
 
-(load "../sheriff.carp")
+(load "../src/kv.carp")
 
 (use Test)
 

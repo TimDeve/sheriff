@@ -19,17 +19,13 @@
     (macro-error "Only Int, String and Bool are allowed in struct to unmarshall to")))
 
   (defmacro unmarshall [t m]
-    (let [var (gensym-with t)]
-      (list
-       'let (array var
-                   (cons (Symbol.prefix t 'init)
-                         (map
-                          (fn [x]
-                            (list 'Maybe.or-zero
-                             (Sheriff.KV.from-str
-                               (cadr x)
-                               (list 'ref (list 'Map.get
-                                                 m
-                                                 (str (car x)))))))
-                          (members t))))
-        var)))))
+    (cons (Symbol.prefix t 'init)
+          (map
+           (fn [x]
+             (list 'Maybe.or-zero
+              (Sheriff.KV.from-str
+                (cadr x)
+                (list 'ref (list 'Map.get
+                                  m
+                                  (str (car x)))))))
+           (eval (list 'members t)))))))
