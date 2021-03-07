@@ -2,7 +2,7 @@
 
 (load "Test.carp")
 
-(load "../sheriff.carp")
+(load "../src/marshall.carp")
 
 (use Test)
 
@@ -73,7 +73,7 @@
    "{\"val\": 10}"
    &(Sheriff.JSON.marshall ADouble &(ADouble.init 10.0))
    "Works with Double")
-
+ 
  (assert-equal test
    "{\"sam\": \"Hello\"}"
    &(Sheriff.JSON.marshall AString &(AString.init @"Hello"))

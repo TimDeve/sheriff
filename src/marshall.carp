@@ -2,8 +2,10 @@
 
 (defmodule Sheriff
   (defmodule JSON
+    (defndynamic ggg [] (gensym-with 'arr))
+
     (defndynamic make-array [lst]
-      (let [arr (gensym-with 'arr)]
+      (let [arr (Sheriff.JSON.ggg)]
        (list 'let
              (array arr (list 'Array.zero))
              (cons-last
@@ -72,12 +74,12 @@
             (Sheriff.JSON.make-array
                    (map
                     (Sheriff.JSON.create-pair t v)
-                    (members t)))))
+                    (eval (list 'members t))))))
 
     (defndynamic object [t v]
       (list 'Sheriff.JSON.DSL.o
             (list 'Map.from-array
-                  (list 'ref (Sheriff.JSON.create-arr-for-map t v)))))
+                  (Sheriff.JSON.create-arr-for-map t v))))
 
     (defndynamic arr [t v]
      (let [map-fn (list 'fn (array 'x)
