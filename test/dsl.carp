@@ -2,7 +2,7 @@
 
 (load "Test.carp")
 
-(load "../sheriff.carp")
+(load "../src/dsl.carp")
 
 (use Test)
 (use Sheriff.JSON.DSL)

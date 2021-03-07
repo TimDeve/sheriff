@@ -6,12 +6,12 @@
     (deftype DSL (Node [String]))
 
     (defmodule DSL
-      (sig stringify (Fn [DSL] String))
-      (defn stringify [n] (match n (Node v) v))
+      (sig stringify (Fn [Sheriff.JSON.DSL] String))
+      (defn stringify [n] (match n (Sheriff.JSON.DSL.Node v) v))
 
       (defn escape-string [s]
         (let [sub $[(Pair.init @#"\\" @"\\\\\\\\")
-                    (Pair.init @#"\"" @"\\\\\"")
+                    (Pair.init (Pattern.init "\\\"") @"\\\\\"")
                     (Pair.init @#"'" @"\\\\'")
                     (Pair.init @#"\t" @"\\\\t")
                     (Pair.init (Pattern.init "\b") @"\\\\b")
@@ -24,38 +24,35 @@
            s
            sub)))
 
-      (sig s (Fn [String] DSL))
-      (defn s [string] (Node (fmt "\"%s\"" &(escape-string string))))
+      (sig s (Fn [String] Sheriff.JSON.DSL))
+      (defn s [string] (Sheriff.JSON.DSL.Node (fmt "\"%s\"" &(escape-string string))))
 
-      (sig n (Fn [Double] DSL))
-      (defn n [double] (Node (fmt "%.16g" double)))
+      (sig n (Fn [Double] Sheriff.JSON.DSL))
+      (defn n [double] (Sheriff.JSON.DSL.Node (fmt "%.16g" double)))
 
-      (sig b (Fn [Bool] DSL))
-      (defn b [boolean] (Node (Bool.str boolean)))
+      (sig b (Fn [Bool] Sheriff.JSON.DSL))
+      (defn b [boolean] (Sheriff.JSON.DSL.Node (Bool.str boolean)))
 
-      (sig a (Fn [(Array DSL)] DSL))
+      (sig a (Fn [(Array Sheriff.JSON.DSL)] Sheriff.JSON.DSL))
       (defn a [arr]
-        (Node
+        (Sheriff.JSON.DSL.Node
           (fmt "[%s]" &(String.join ", " &(copy-map
-                                           &(fn [n] (stringify @n))
-                                           &(the (Array DSL) arr))))))
+                                           &(fn [n] (Sheriff.JSON.DSL.stringify @n))
+                                           &(the (Array Sheriff.JSON.DSL) arr))))))
 
-      (hidden make-kv)
-      (private make-kv)
-      (sig make-kv (Fn [(Pair String Node)] String))
-      (defn make-kv [arg]
+      (defn- make-kv [arg]
         (fmt "\"%s\": %s"
              (the (Ref String) (Pair.a arg))
-             &(stringify @(Pair.b arg))))
+             &(Sheriff.JSON.DSL.stringify @(Pair.b arg))))
 
-      (sig o (Fn [(Map String DSL)] DSL))
+      (sig o (Fn [(Map String Sheriff.JSON.DSL)] Sheriff.JSON.DSL))
       (defn o [m]
-        (Node
-          (fmt "{%s}" &(==> (to-array &(the (Map String DSL) m))
+        (Sheriff.JSON.DSL.Node
+          (fmt "{%s}" &(--> (to-array &(the (Map String Sheriff.JSON.DSL) m))
                             (ref)
                             (copy-map &Sheriff.JSON.DSL.make-kv)
                             (ref)
                             (String.join ", ")))))
 
-      (sig null (Fn [] DSL))
-      (defn null [] (Node @"null")))))
+      (sig null (Fn [] Sheriff.JSON.DSL))
+      (defn null [] (Sheriff.JSON.DSL.Node @"null")))))
