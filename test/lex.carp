@@ -1,11 +1,11 @@
 (load "Test.carp")
 
-(load "../sheriff.carp")
+(load "../src/lex.carp")
 
 (use Test)
 
 (use Sheriff.JSON.Lexer)
-(use Sheriff.JSON.Lexer.Token)
+(use Sheriff.JSON.Lexer.Tok)
 
 (deftest test
   (assert-equal test

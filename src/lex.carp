@@ -3,7 +3,7 @@
 (defmodule Sheriff
  (defmodule JSON
   (defmodule Lexer
-    (deftype Token
+    (deftype Tok
      LeftCurly
      RightCurly
      LeftBracket
@@ -15,7 +15,7 @@
      (Bol [Bool])
      (Num [String]))
 
-    (defmodule Token
+    (defmodule Tok
      (defn to-int [t]
       (match-ref t
        LeftCurly 0
@@ -32,16 +32,14 @@
      (defn is-a [a b]
       (Int.= (to-int a) (to-int b))))
 
-    (use Token)
+    (use Sheriff.JSON.Lexer)
 
     (defn is-white-space? [char]
       (StaticArray.any? &(fn [c] (= char c)) $[\space \tab \newline \return]))
 
-    (defn true? [b] @b)
-
     (defn is-null? [i chrs]
       (if (< (+ i 3) (Array.length chrs))
-        (StaticArray.all? &true?
+        (StaticArray.all? &copy
                           $[(= \n @(Array.unsafe-nth chrs i))
                             (= \u @(Array.unsafe-nth chrs (+ 1 i)))
                             (= \l @(Array.unsafe-nth chrs (+ 2 i)))
@@ -50,7 +48,7 @@
 
     (defn is-true? [i chrs]
       (if (< (+ i 3) (Array.length chrs))
-        (StaticArray.all? &true?
+        (StaticArray.all? &copy
                           $[(= \t @(Array.unsafe-nth chrs i))
                             (= \r @(Array.unsafe-nth chrs (+ 1 i)))
                             (= \u @(Array.unsafe-nth chrs (+ 2 i)))
@@ -59,7 +57,7 @@
 
     (defn is-false? [i chrs]
       (if (< (+ i 4) (Array.length chrs))
-        (StaticArray.all? &true?
+        (StaticArray.all? &copy
                           $[(= \f @(Array.unsafe-nth chrs i))
                             (= \a @(Array.unsafe-nth chrs (+ 1 i)))
                             (= \l @(Array.unsafe-nth chrs (+ 2 i)))
@@ -78,7 +76,7 @@
               (do
                 (Array.push-back! &char-str @char)
                 (update! i inc)))))
-        (Success (Pair.init i (Num (String.from-chars &char-str))))))
+        (Success (Pair.init i (Tok.Num (String.from-chars &char-str))))))
 
     (defn lex-string [i chrs]
       (let [error false done false char-str (the (Array Char) [])]
@@ -94,9 +92,8 @@
                 (if (= i (Array.length chrs)) (set! error true) ())))))
           (if error
             (Error @"Unmatched double-quote")
-            (Success (Pair.init i (Str (String.from-chars &char-str))))))))
+            (Success (Pair.init i (Tok.Str (String.from-chars &char-str))))))))
 
-    ;(sig lex-i (Fn [Int (Ref Array Char) (Result (Array Token) String)] (Result (Array Token) String)))
     (defn lex-i [i chrs res-toks]
       (match res-toks
         (Error e) (Error e)
@@ -105,7 +102,7 @@
           (Success toks)
           (let [current-char (Array.unsafe-nth chrs i)]
             (if (is-white-space? current-char)
-              (lex-i (inc i) chrs (the (Result (Array Token) String) (Success toks)))
+              (lex-i (inc i) chrs (the (Result (Array Sheriff.JSON.Lexer.Tok) String) (Success toks)))
               (if (Char.num? @current-char)
                 (let [num-pair (lex-number i chrs)]
                  (match num-pair
@@ -113,67 +110,67 @@
                    (Success pair)
                    (lex-i @(Pair.a &pair)
                        chrs
-                       (the (Result (Array Token) String)
+                       (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
                         (Success (Array.push-back toks @(Pair.b &pair)))))))
                 (case @current-char
                   \{ (lex-i (inc i)
                             chrs
-                            (the (Result (Array Token) String)
-                             (Success (Array.push-back toks (LeftCurly)))))
+                            (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
+                             (Success (Array.push-back toks (Tok.LeftCurly)))))
                   \} (lex-i (inc i)
                             chrs
-                            (the (Result (Array Token) String)
-                             (Success (Array.push-back toks (RightCurly)))))
+                            (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
+                             (Success (Array.push-back toks (Tok.RightCurly)))))
                   \[ (lex-i (inc i)
                             chrs
-                            (the (Result (Array Token) String)
-                             (Success (Array.push-back toks (LeftBracket)))))
+                            (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
+                             (Success (Array.push-back toks (Tok.LeftBracket)))))
                   \] (lex-i (inc i)
                             chrs
-                            (the (Result (Array Token) String)
-                             (Success (Array.push-back toks (RightBracket)))))
+                            (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
+                             (Success (Array.push-back toks (Tok.RightBracket)))))
                   \: (lex-i (inc i)
                             chrs
-                            (the (Result (Array Token) String)
-                             (Success (Array.push-back toks (Colon)))))
+                            (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
+                             (Success (Array.push-back toks (Tok.Colon)))))
                   \, (lex-i (inc i)
                             chrs
-                            (the (Result (Array Token) String)
-                             (Success (Array.push-back toks (Comma)))))
+                            (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
+                             (Success (Array.push-back toks (Tok.Comma)))))
                   \n (if (not (is-null? i chrs))
                        (Error @"Failed to lex null token")
                        (lex-i (+ 4 i)
                               chrs
-                              (the (Result (Array Token) String)
-                               (Success (Array.push-back toks (Null))))))
+                              (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
+                               (Success (Array.push-back toks (Tok.Null))))))
                   \t (if (not (is-true? i chrs))
                        (Error @"Failed to lex true token")
                        (lex-i (+ 4 i)
                               chrs
-                              (the (Result (Array Token) String)
-                               (Success (Array.push-back toks (Bol true))))))
+                              (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
+                               (Success (Array.push-back toks (Tok.Bol true))))))
                   \f (if (not (is-false? i chrs))
                        (Error @"Failed to lex false token")
                        (lex-i (+ 5 i)
                               chrs
-                              (the (Result (Array Token) String)
-                               (Success (Array.push-back toks (Bol false))))))
+                              (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
+                               (Success (Array.push-back toks (Tok.Bol false))))))
                   \" (let [string-pair (lex-string (inc i) chrs)]
                       (match string-pair
                         (Error e) (Error e)
                         (Success pair)
                         (lex-i (inc @(Pair.a &pair))
                             chrs
-                            (the (Result (Array Token) String)
+                            (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
                              (Success (Array.push-back toks @(Pair.b &pair)))))))
                  (Error (String.append "Unexpect char = " &(str @current-char))))))))))
 
-    (sig lex (Fn [(Ref String)] (Result (Array Token) String)))
+    (sig lex (Fn [(Ref String)] (Result (Array Sheriff.JSON.Lexer.Tok) String)))
     (defn lex [s]
-     (the (Result (Array Token) String)
+     (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
       (let [chrs (chars s)]
        (lex-i 0
               &chrs
-              (the (Result (Array Token) String)
+              (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
                    (Success [])))))))))
 
