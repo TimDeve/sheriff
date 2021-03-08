@@ -2,30 +2,29 @@
  (implements zero zero)
  (defn zero [] false))
 
-(defmodule Sheriff
- (defmodule KV
-  (defn bool-from-string [s]
-    (if (= s "true")
-      (Maybe.Just true)
-      (if (= s "false")
-        (Maybe.Just false)
-        (Maybe.Nothing))))
+(defmodule SheriffKV
+ (defn bool-from-string [s]
+   (if (= s "true")
+     (Maybe.Just true)
+     (if (= s "false")
+       (Maybe.Just false)
+       (Maybe.Nothing))))
 
-  (defndynamic from-str [t v]
-   (case t
-    'Int (list 'Int.from-string v)
-    'String (list 'Maybe.Just (list 'String.str v))
-    'Bool (list 'Sheriff.KV.bool-from-string v)
-    (macro-error "Only Int, String and Bool are allowed in struct to unmarshall to")))
+ (defndynamic from-str [t v]
+  (case t
+   'Int (list 'Int.from-string v)
+   'String (list 'Maybe.Just (list 'String.str v))
+   'Bool (list 'SheriffKV.bool-from-string v)
+   (macro-error "Only Int, String and Bool are allowed in struct to unmarshall to")))
 
-  (defmacro unmarshall [t m]
-    (cons (Symbol.prefix t 'init)
-          (map
-           (fn [x]
-             (list 'Maybe.or-zero
-              (Sheriff.KV.from-str
-                (cadr x)
-                (list 'ref (list 'Map.get
-                                  m
-                                  (str (car x)))))))
-           (eval (list 'members t)))))))
+ (defmacro unmarshall [t m]
+   (cons (Symbol.prefix t 'init)
+         (map
+          (fn [x]
+            (list 'Maybe.or-zero
+             (SheriffKV.from-str
+               (cadr x)
+               (list 'ref (list 'Map.get
+                                 m
+                                 (str (car x)))))))
+          (eval (list 'members t))))))

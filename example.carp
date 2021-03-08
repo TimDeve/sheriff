@@ -49,9 +49,9 @@
 (defn kv-example []
   (do
    (println* "---KV---")
-   (println* &(Sheriff.KV.unmarshall KvType &{@"keythree" @"true"
-                                              @"keyone" @"3"
-                                              @"keytwo" @"wow"}))))
+   (println* &(SheriffKV.unmarshall KvType &{@"keythree" @"true"
+                                             @"keyone" @"3"
+                                             @"keytwo" @"wow"}))))
 
 (defn main []
   (do

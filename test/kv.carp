@@ -40,30 +40,30 @@
 (deftest test
   (assert-equal test
     &(BasicInt.init 1)
-    &(Sheriff.KV.unmarshall BasicInt &{@"val" @"1"})
+    &(SheriffKV.unmarshall BasicInt &{@"val" @"1"})
     "Unmarshalls single int")
 
   (assert-equal test
     &(BasicStr.init @"testing")
-    &(Sheriff.KV.unmarshall BasicStr &{@"wow" @"testing"})
+    &(SheriffKV.unmarshall BasicStr &{@"wow" @"testing"})
     "Unmarshalls single string")
 
   (assert-equal test
     &(BasicBool.init true)
-    &(Sheriff.KV.unmarshall BasicBool &{@"b" @"true"})
+    &(SheriffKV.unmarshall BasicBool &{@"b" @"true"})
     "Unmarshalls single bool")
 
   (assert-equal test
     &(TwoFields.init @"a string" 1)
-    &(Sheriff.KV.unmarshall TwoFields &{@"one" @"a string" @"two" @"1"})
+    &(SheriffKV.unmarshall TwoFields &{@"one" @"a string" @"two" @"1"})
     "Unmarshalls two fields")
 
   (assert-equal test
     &(TwoFields.init @"a string" 1)
-    &(Sheriff.KV.unmarshall TwoFields &{@"one" @"a string" @"two" @"1"})
+    &(SheriffKV.unmarshall TwoFields &{@"one" @"a string" @"two" @"1"})
     "Unmarshalls two fields")
 
   (assert-equal test
     &(All.init @"a string" 1 true)
-    &(Sheriff.KV.unmarshall All &{@"one" @"a string" @"three" @"true" @"two" @"1"})
+    &(SheriffKV.unmarshall All &{@"one" @"a string" @"three" @"true" @"two" @"1"})
     "all together now"))
