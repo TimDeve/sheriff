@@ -1,58 +1,56 @@
 (use Array)
 (use Map)
 
-(defmodule Sheriff
-  (defmodule JSON
-    (deftype DSL (Node [String]))
+(deftype SheriffDSL (Node [String]))
 
-    (defmodule DSL
-      (sig stringify (Fn [Sheriff.JSON.DSL] String))
-      (defn stringify [n] (match n (Sheriff.JSON.DSL.Node v) v))
+(defmodule SheriffDSL
+  (sig stringify (Fn [SheriffDSL] String))
+  (defn stringify [n] (match n (SheriffDSL.Node v) v))
 
-      (defn escape-string [s]
-        (let [sub $[(Pair.init @#"\\" @"\\\\\\\\")
-                    (Pair.init (Pattern.init "\\\"") @"\\\\\"")
-                    (Pair.init @#"'" @"\\\\'")
-                    (Pair.init @#"\t" @"\\\\t")
-                    (Pair.init (Pattern.init "\b") @"\\\\b")
-                    (Pair.init (Pattern.init "\f") @"\\\\f")
-                    (Pair.init @#"\r" @"\\\\r")
-                    (Pair.init @#"\n" @"\\\\n")]]
-          (StaticArray.reduce
-           &(fn [acc pair]
-             (Pattern.substitute (Pair.a pair) &acc (Pair.b pair) -1))
-           s
-           sub)))
+  (defn escape-string [s]
+    (let [sub $[(Pair.init @#"\\" @"\\\\\\\\")
+                (Pair.init (Pattern.init "\\\"") @"\\\\\"")
+                (Pair.init @#"'" @"\\\\'")
+                (Pair.init @#"\t" @"\\\\t")
+                (Pair.init (Pattern.init "\b") @"\\\\b")
+                (Pair.init (Pattern.init "\f") @"\\\\f")
+                (Pair.init @#"\r" @"\\\\r")
+                (Pair.init @#"\n" @"\\\\n")]]
+      (StaticArray.reduce
+       &(fn [acc pair]
+         (Pattern.substitute (Pair.a pair) &acc (Pair.b pair) -1))
+       s
+       sub)))
 
-      (sig s (Fn [String] Sheriff.JSON.DSL))
-      (defn s [string] (Sheriff.JSON.DSL.Node (fmt "\"%s\"" &(escape-string string))))
+  (sig s (Fn [String] SheriffDSL))
+  (defn s [string] (SheriffDSL.Node (fmt "\"%s\"" &(escape-string string))))
 
-      (sig n (Fn [Double] Sheriff.JSON.DSL))
-      (defn n [double] (Sheriff.JSON.DSL.Node (fmt "%.16g" double)))
+  (sig n (Fn [Double] SheriffDSL))
+  (defn n [double] (SheriffDSL.Node (fmt "%.16g" double)))
 
-      (sig b (Fn [Bool] Sheriff.JSON.DSL))
-      (defn b [boolean] (Sheriff.JSON.DSL.Node (Bool.str boolean)))
+  (sig b (Fn [Bool] SheriffDSL))
+  (defn b [boolean] (SheriffDSL.Node (Bool.str boolean)))
 
-      (sig a (Fn [(Array Sheriff.JSON.DSL)] Sheriff.JSON.DSL))
-      (defn a [arr]
-        (Sheriff.JSON.DSL.Node
-          (fmt "[%s]" &(String.join ", " &(copy-map
-                                           &(fn [n] (Sheriff.JSON.DSL.stringify @n))
-                                           &(the (Array Sheriff.JSON.DSL) arr))))))
+  (sig a (Fn [(Array SheriffDSL)] SheriffDSL))
+  (defn a [arr]
+    (SheriffDSL.Node
+      (fmt "[%s]" &(String.join ", " &(copy-map
+                                       &(fn [n] (SheriffDSL.stringify @n))
+                                       &(the (Array SheriffDSL) arr))))))
 
-      (defn- make-kv [arg]
-        (fmt "\"%s\": %s"
-             (the (Ref String) (Pair.a arg))
-             &(Sheriff.JSON.DSL.stringify @(Pair.b arg))))
+  (defn- make-kv [arg]
+    (fmt "\"%s\": %s"
+         (the (Ref String) (Pair.a arg))
+         &(SheriffDSL.stringify @(Pair.b arg))))
 
-      (sig o (Fn [(Map String Sheriff.JSON.DSL)] Sheriff.JSON.DSL))
-      (defn o [m]
-        (Sheriff.JSON.DSL.Node
-          (fmt "{%s}" &(--> (to-array &(the (Map String Sheriff.JSON.DSL) m))
-                            (ref)
-                            (copy-map &Sheriff.JSON.DSL.make-kv)
-                            (ref)
-                            (String.join ", ")))))
+  (sig o (Fn [(Map String SheriffDSL)] SheriffDSL))
+  (defn o [m]
+    (SheriffDSL.Node
+      (fmt "{%s}" &(--> (to-array &(the (Map String SheriffDSL) m))
+                        (ref)
+                        (copy-map &SheriffDSL.make-kv)
+                        (ref)
+                        (String.join ", ")))))
 
-      (sig null (Fn [] Sheriff.JSON.DSL))
-      (defn null [] (Sheriff.JSON.DSL.Node @"null")))))
+  (sig null (Fn [] SheriffDSL))
+  (defn null [] (SheriffDSL.Node @"null")))

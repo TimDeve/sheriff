@@ -19,7 +19,7 @@
     (println* (format "Output: %s" &(str &(Result.unsafe-from-success (SheriffJSON.unmarshall SomeStruct input)))))))
 
 (defn dsl-example []
-  (with Sheriff.JSON.DSL
+  (with SheriffDSL
     (do
      (println* "---DSL---")
      (println* (stringify (a [(s @"Hello")

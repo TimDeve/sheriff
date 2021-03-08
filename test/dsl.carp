@@ -5,7 +5,7 @@
 (load "../src/dsl.carp")
 
 (use Test)
-(use Sheriff.JSON.DSL)
+(use SheriffDSL)
 
 (deftest test
   (assert-equal test

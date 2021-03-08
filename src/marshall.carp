@@ -52,10 +52,10 @@
           (if (SheriffJSON.is-maybe-type? t)
             (SheriffJSON.maybe t v)
             (case t
-              'Double (list 'Sheriff.JSON.DSL.n (list 'copy v))
-              'Int (list 'Sheriff.JSON.DSL.n (list 'Double.from-int (list 'copy v)))
-              'String (list 'Sheriff.JSON.DSL.s (list 'copy v))
-              'Bool (list 'Sheriff.JSON.DSL.b (list 'copy v))
+              'Double (list 'SheriffDSL.n (list 'copy v))
+              'Int (list 'SheriffDSL.n (list 'Double.from-int (list 'copy v)))
+              'String (list 'SheriffDSL.s (list 'copy v))
+              'Bool (list 'SheriffDSL.b (list 'copy v))
               (SheriffJSON.object t v))))))
 
   (defndynamic create-pair [t v]
@@ -70,21 +70,21 @@
 
   (defndynamic create-arr-for-map [t v]
     (list 'the
-          (list 'Array (list 'Pair 'String 'Sheriff.JSON.DSL))
+          (list 'Array (list 'Pair 'String 'SheriffDSL))
           (SheriffJSON.make-array
                  (map
                   (SheriffJSON.create-pair t v)
                   (eval (list 'members t))))))
 
   (defndynamic object [t v]
-    (list 'Sheriff.JSON.DSL.o
+    (list 'SheriffDSL.o
           (list 'Map.from-array
                 (SheriffJSON.create-arr-for-map t v))))
 
   (defndynamic arr [t v]
    (let [map-fn (list 'fn (array 'x)
                     (SheriffJSON.to-str (SheriffJSON.get-array-type t) 'x))]
-        (list 'Sheriff.JSON.DSL.a
+        (list 'SheriffDSL.a
               (list 'Array.copy-map (list 'ref map-fn)
                                     v))))
 
@@ -92,10 +92,10 @@
     (let [val (gensym-with 'val)]
       (list 'match-ref v
         (list 'Maybe.Just val) (SheriffJSON.to-str (SheriffJSON.get-maybe-type t) val)
-        'Maybe.Nothing (list 'Sheriff.JSON.DSL.null))))
+        'Maybe.Nothing (list 'SheriffDSL.null))))
 
   (defndynamic stringify [t v]
-    (list 'Sheriff.JSON.DSL.stringify
+    (list 'SheriffDSL.stringify
           (SheriffJSON.to-str t v)))
 
   (defmacro marshall [t v]
