@@ -21,67 +21,67 @@
 (deftest test
   (assert-equal test
     "true"
-    &(Sheriff.JSON.marshall Bool &true)
+    &(SheriffJSON.marshall Bool &true)
     "Works with just Bool")
 
   (assert-equal test
     "3.14"
-    &(Sheriff.JSON.marshall Double &3.14)
+    &(SheriffJSON.marshall Double &3.14)
     "Works with just Double")
 
   (assert-equal test
     "42"
-    &(Sheriff.JSON.marshall Int &42)
+    &(SheriffJSON.marshall Int &42)
     "Works with just Int")
 
   (assert-equal test
     "\"Sup\""
-    &(Sheriff.JSON.marshall String "Sup")
+    &(SheriffJSON.marshall String "Sup")
     "Works with just String")
 
   (assert-equal test
     "[1, 2, 3]"
-    &(Sheriff.JSON.marshall (Array Double) &[1.0, 2.0, 3.0])
+    &(SheriffJSON.marshall (Array Double) &[1.0, 2.0, 3.0])
     "Works with Array")
 
   (assert-equal test
     "[\"one\", \"two\"]"
-    &(Sheriff.JSON.marshall (Array String) &[@"one" @"two"])
+    &(SheriffJSON.marshall (Array String) &[@"one" @"two"])
     "Works with String Array")
 
   (assert-equal test
     "[{\"boooo\": true}, {\"boooo\": false}]"
-    &(Sheriff.JSON.marshall (Array ABool) &[(ABool.init true) (ABool.init false)])
+    &(SheriffJSON.marshall (Array ABool) &[(ABool.init true) (ABool.init false)])
     "Works with Struct Array")
 
   (assert-equal test
     "\"Wow\""
-    &(Sheriff.JSON.marshall (Maybe String) &(Maybe.Just @"Wow"))
+    &(SheriffJSON.marshall (Maybe String) &(Maybe.Just @"Wow"))
     "Works with Maybe Just")
 
   (assert-equal test
     "null"
-    &((fn [] (Sheriff.JSON.marshall (Maybe String) &(Maybe.Nothing))))
+    &((fn [] (SheriffJSON.marshall (Maybe String) &(Maybe.Nothing))))
     "Works with Maybe Nothing")
 
  (assert-equal test
    "{\"boooo\": true}"
-   &(Sheriff.JSON.marshall ABool &(ABool.init true))
+   &(SheriffJSON.marshall ABool &(ABool.init true))
    "Works with Bool")
 
  (assert-equal test
    "{\"val\": 10}"
-   &(Sheriff.JSON.marshall ADouble &(ADouble.init 10.0))
+   &(SheriffJSON.marshall ADouble &(ADouble.init 10.0))
    "Works with Double")
  
  (assert-equal test
    "{\"sam\": \"Hello\"}"
-   &(Sheriff.JSON.marshall AString &(AString.init @"Hello"))
+   &(SheriffJSON.marshall AString &(AString.init @"Hello"))
    "Works with String")
 
  (assert-equal test
    "{\"arr\": [1, 2], \"int\": 42, \"dang\": 3.14, \"soom\": \"Carp\", \"nil\": \"maybe\", \"bam\": false}"
-   &((fn [] (Sheriff.JSON.marshall All &(All.init false
+   &((fn [] (SheriffJSON.marshall All &(All.init false
                                                   3.14
                                                   @"Carp"
                                                   [1.0, 2.0]
@@ -91,8 +91,8 @@
 
  (assert-equal test
    "{\"key-two\": {\"val\": 14.44}, \"key-one\": {\"boooo\": true}}"
-   &((fn [] (Sheriff.JSON.marshall Nested &(Nested.init
-                                            (ABool.init true)
-                                            (ADouble.init 14.44)))))
+   &((fn [] (SheriffJSON.marshall Nested &(Nested.init
+                                           (ABool.init true)
+                                           (ADouble.init 14.44)))))
    "Works with nested structs"))
 

@@ -1,10 +1,10 @@
 (load "Test.carp")
 
-(load "../sheriff.carp")
+(load "../src/parse.carp")
 
 (use Test)
 
-(use Sheriff.JSON)
+(use SheriffJSON)
 
 (deftest test
   (assert-equal test

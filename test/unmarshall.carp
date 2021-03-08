@@ -2,7 +2,7 @@
 
 (load "Test.carp")
 
-(load "../sheriff.carp")
+(load "../src/unmarshall.carp")
 
 (use Test)
 
@@ -38,41 +38,41 @@
 (deftest test
   (assert-equal test
     &(Result.Success @"wow")
-    &(Sheriff.JSON.unmarshall String "\"wow\"")
+    &(SheriffJSON.unmarshall String "\"wow\"")
     "Works with just String")
 
   (assert-equal test
     &(Result.Success true)
-    &(Sheriff.JSON.unmarshall Bool "true")
+    &(SheriffJSON.unmarshall Bool "true")
     "Works with just Bool")
 
   (assert-equal test
     &(Result.Success 12.34)
-    &(Sheriff.JSON.unmarshall Double "12.34")
+    &(SheriffJSON.unmarshall Double "12.34")
     "Works with just Double")
 
   (assert-equal test
     &(Result.Success 42)
-    &(Sheriff.JSON.unmarshall Int "42")
+    &(SheriffJSON.unmarshall Int "42")
     "Works with just Int")
 
   (assert-equal test
     &(Result.Success (StringsStruct.init @"val one" @"val two"))
-    &(Sheriff.JSON.unmarshall StringsStruct "{\"key-one\": \"val one\", \"keytwo\": \"val two\"}")
+    &(SheriffJSON.unmarshall StringsStruct "{\"key-one\": \"val one\", \"keytwo\": \"val two\"}")
     "Works with struct with just Strings")
 
   (assert-equal test
     &(Result.Success (BoolStruct.init false))
-    &(Sheriff.JSON.unmarshall BoolStruct "{\"key-one\": false}")
+    &(SheriffJSON.unmarshall BoolStruct "{\"key-one\": false}")
     "Works with struct with bool")
 
   (assert-equal test
     &(Result.Success (NumberStruct.init 1234.5678))
-    &(Sheriff.JSON.unmarshall NumberStruct "{\"key-one\": 1234.5678}")
+    &(SheriffJSON.unmarshall NumberStruct "{\"key-one\": 1234.5678}")
     "Works with struct with number")
 
   (assert-equal test
     &(Result.Success (AllStruct.init @"Hello Hello" false 1234.5678 8 42.0))
-    &(Sheriff.JSON.unmarshall AllStruct "{\"st\": \"Hello Hello\", \"num\": 42, \"deci\": 1234.5678, \"bol\": false, \"int\": 8}")
+    &(SheriffJSON.unmarshall AllStruct "{\"st\": \"Hello Hello\", \"num\": 42, \"deci\": 1234.5678, \"bol\": false, \"int\": 8}")
     "Works with struct with all supported types"))
 

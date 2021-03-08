@@ -6,17 +6,17 @@
 (defn marshall-example []
   (do
    (println* "---Marshall---")
-   (println* (Sheriff.JSON.marshall SomeStruct &(SomeStruct.init 3.14 @"Hi" false 42)))
-   (println* (Sheriff.JSON.marshall Nested &(Nested.init @"Carp" (SomeStruct.init 3.14 @"Hi" false 1992))))
-   (println* (Sheriff.JSON.marshall (Array SomeStruct) &[(SomeStruct.init 1.34 @"Hi" false 0)
-                                                         (SomeStruct.init 3.14 @"Hello" true 1)]))
-   (println* (Sheriff.JSON.marshall (Maybe String) &(Maybe.Nothing)))))
+   (println* (SheriffJSON.marshall SomeStruct &(SomeStruct.init 3.14 @"Hi" false 42)))
+   (println* (SheriffJSON.marshall Nested &(Nested.init @"Carp" (SomeStruct.init 3.14 @"Hi" false 1992))))
+   (println* (SheriffJSON.marshall (Array SomeStruct) &[(SomeStruct.init 1.34 @"Hi" false 0)
+                                                        (SomeStruct.init 3.14 @"Hello" true 1)]))
+   (println* (SheriffJSON.marshall (Maybe String) &(Maybe.Nothing)))))
 
 (defn unmarshall-example []
   (let-do [input "{\"a-string\": \"Hi\", \"a-int\": 42, \"a-bool\": false, \"a-double\": 3.14}"]
     (println* "---Unmarshall---")
     (println* (format "Input: %s" input))
-    (println* (format "Output: %s" &(str &(Result.unsafe-from-success (Sheriff.JSON.unmarshall SomeStruct input)))))))
+    (println* (format "Output: %s" &(str &(Result.unsafe-from-success (SheriffJSON.unmarshall SomeStruct input)))))))
 
 (defn dsl-example []
   (with Sheriff.JSON.DSL

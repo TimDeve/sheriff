@@ -1,104 +1,104 @@
 (load "dsl.carp")
 
-(defmodule Sheriff
-  (defmodule JSON
-    (defndynamic ggg [] (gensym-with 'arr))
+(defmodule SheriffJSON
+  (defndynamic make-array [lst]
+    (let [arr (gensym-with 'arr)]
+     (list 'let
+           (array arr (list 'Array.zero))
+           (cons-last
+             arr
+             (cons
+               'do
+               (map (fn [item]
+                        (list 'Array.push-back!
+                              (list 'ref arr)
+                              item))
+                    lst))))))
 
-    (defndynamic make-array [lst]
-      (let [arr (Sheriff.JSON.ggg)]
-       (list 'let
-             (array arr (list 'Array.zero))
-             (cons-last
-               arr
-               (cons
-                 'do
-                 (map (fn [item]
-                          (list 'Array.push-back!
-                                (list 'ref arr)
-                                item))
-                      lst))))))
+  (defndynamic is-array-type? [t]
+    (if (and (list? t) (not (empty? t)))
+      (= 'Array (car t))
+      false))
 
-    (defndynamic is-array-type? [t]
-      (if (and (list? t) (not (empty? t)))
-        (= 'Array (car t))
-        false))
+  (defndynamic get-array-type [t]
+    (cadr t))
 
-    (defndynamic get-array-type [t]
-      (cadr t))
+  (defndynamic is-maybe-type? [t]
+    (if (and (list? t) (not (empty? t)))
+      (= 'Maybe (car t))
+      false))
 
-    (defndynamic is-maybe-type? [t]
-      (if (and (list? t) (not (empty? t)))
-        (= 'Maybe (car t))
-        false))
+  (defndynamic get-maybe-type [t]
+    (cadr t))
 
-    (defndynamic get-maybe-type [t]
-      (cadr t))
+  (defndynamic not-supported-message [t]
+    (macro-error (String.concat [(str t) " are not allowed in struct to marshall"])))
 
-    (defndynamic not-supported-message [t]
-      (macro-error (String.concat [(str t) " are not allowed in struct to marshall"])))
+  (defndynamic supported? [t]
+    (if (list? t)
+      (or (SheriffJSON.is-array-type? t)
+          (SheriffJSON.is-maybe-type? t))
+      (or (Introspect.struct? (eval t))
+          (any? (fn [x] (= t x)) '(Double
+                                   Int
+                                   String
+                                   Bool)))))
 
-    (defndynamic supported? [t]
-      (if (list? t)
-        (or (Sheriff.JSON.is-array-type? t)
-            (Sheriff.JSON.is-maybe-type? t))
-        (or (Introspect.struct? (eval t))
-            (any? (fn [x] (= t x)) '(Double
-                                     Int
-                                     String
-                                     Bool)))))
+  (defndynamic to-str [t v]
+    (if (not (SheriffJSON.supported? t))
+        (SheriffJSON.not-supported-message t)
+        (if (SheriffJSON.is-array-type? t)
+          (SheriffJSON.arr t v)
+          (if (SheriffJSON.is-maybe-type? t)
+            (SheriffJSON.maybe t v)
+            (case t
+              'Double (list 'Sheriff.JSON.DSL.n (list 'copy v))
+              'Int (list 'Sheriff.JSON.DSL.n (list 'Double.from-int (list 'copy v)))
+              'String (list 'Sheriff.JSON.DSL.s (list 'copy v))
+              'Bool (list 'Sheriff.JSON.DSL.b (list 'copy v))
+              (SheriffJSON.object t v))))))
 
-    (defndynamic to-str [t v]
-      (if (not (Sheriff.JSON.supported? t))
-          (Sheriff.JSON.not-supported-message t)
-          (if (Sheriff.JSON.is-array-type? t)
-            (Sheriff.JSON.arr t v)
-            (if (Sheriff.JSON.is-maybe-type? t)
-              (Sheriff.JSON.maybe t v)
-              (case t
-                'Double (list 'Sheriff.JSON.DSL.n (list 'copy v))
-                'Int (list 'Sheriff.JSON.DSL.n (list 'Double.from-int (list 'copy v)))
-                'String (list 'Sheriff.JSON.DSL.s (list 'copy v))
-                'Bool (list 'Sheriff.JSON.DSL.b (list 'copy v))
-                (Sheriff.JSON.object t v))))))
-
-    (defndynamic create-pair [t v]
-      (fn [type-pair]
+  (defndynamic create-pair [t v]
+    (fn [type-pair]
+      ; Not using the gensym, just there as a workaround for
+      ; https://github.com/carp-lang/Carp/issues/1181
+      (let [_gen_new_sym (gensym)]
         (list 'Pair.init
            (list 'copy (str (car type-pair)))
-           (Sheriff.JSON.to-str (cadr type-pair)
-                           (list (Symbol.prefix t (car type-pair)) v)))))
+           (SheriffJSON.to-str (cadr type-pair)
+                           (list (Symbol.prefix t (car type-pair)) v))))))
 
-    (defndynamic create-arr-for-map [t v]
-      (list 'the
-            (list 'Array (list 'Pair 'String 'Sheriff.JSON.DSL))
-            (Sheriff.JSON.make-array
-                   (map
-                    (Sheriff.JSON.create-pair t v)
-                    (eval (list 'members t))))))
+  (defndynamic create-arr-for-map [t v]
+    (list 'the
+          (list 'Array (list 'Pair 'String 'Sheriff.JSON.DSL))
+          (SheriffJSON.make-array
+                 (map
+                  (SheriffJSON.create-pair t v)
+                  (eval (list 'members t))))))
 
-    (defndynamic object [t v]
-      (list 'Sheriff.JSON.DSL.o
-            (list 'Map.from-array
-                  (Sheriff.JSON.create-arr-for-map t v))))
+  (defndynamic object [t v]
+    (list 'Sheriff.JSON.DSL.o
+          (list 'Map.from-array
+                (SheriffJSON.create-arr-for-map t v))))
 
-    (defndynamic arr [t v]
-     (let [map-fn (list 'fn (array 'x)
-                      (Sheriff.JSON.to-str (Sheriff.JSON.get-array-type t) 'x))]
-          (list 'Sheriff.JSON.DSL.a
-                (list 'Array.copy-map (list 'ref map-fn)
-                                      v))))
+  (defndynamic arr [t v]
+   (let [map-fn (list 'fn (array 'x)
+                    (SheriffJSON.to-str (SheriffJSON.get-array-type t) 'x))]
+        (list 'Sheriff.JSON.DSL.a
+              (list 'Array.copy-map (list 'ref map-fn)
+                                    v))))
 
-    (defndynamic maybe [t v]
-      (let [val (gensym-with 'val)]
-        (list 'match-ref v
-          (list 'Maybe.Just val) (Sheriff.JSON.to-str (Sheriff.JSON.get-maybe-type t) val)
-          'Maybe.Nothing (list 'Sheriff.JSON.DSL.null))))
+  (defndynamic maybe [t v]
+    (let [val (gensym-with 'val)]
+      (list 'match-ref v
+        (list 'Maybe.Just val) (SheriffJSON.to-str (SheriffJSON.get-maybe-type t) val)
+        'Maybe.Nothing (list 'Sheriff.JSON.DSL.null))))
 
-    (defndynamic stringify [t v]
-      (list 'Sheriff.JSON.DSL.stringify
-            (Sheriff.JSON.to-str t v)))
+  (defndynamic stringify [t v]
+    (list 'Sheriff.JSON.DSL.stringify
+          (SheriffJSON.to-str t v)))
 
-    (defmacro marshall [t v]
-      (let [rf (gensym-with 'reference)]
-         (list 'let (array rf (list 'the (list 'Ref t) v))
-               (Sheriff.JSON.stringify t rf))))))
+  (defmacro marshall [t v]
+    (let [rf (gensym-with 'reference)]
+       (list 'let (array rf (list 'the (list 'Ref t) v))
+             (SheriffJSON.stringify t rf)))))

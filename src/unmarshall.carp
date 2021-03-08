@@ -1,65 +1,64 @@
-(load "dsl.carp")
+(load "parse.carp")
 
-(defmodule Sheriff
-  (defmodule JSON
-    (defndynamic create-key-sym [m]
-     (map
-       (fn [pair] (cons (gensym-with (car pair)) pair))
-       m))
+(defmodule SheriffJSON
+  (defndynamic create-key-sym [m]
+   (map
+     (fn [pair] (cons (gensym-with (car pair)) pair))
+     m))
 
-    (defndynamic try-get-value-for-key [ms parsed path]
-      (fn [hole]
-        (let [sym (car ms)
-              key (cadr ms)
-              typ (caddr ms)
-              parsed-val (gensym-with 'parsed)
-              error (gensym-with 'error)]
-          (list 'let
-                (array parsed-val (Sheriff.JSON.get-value
-                                        typ
-                                        parsed
-                                        (String.concat [path "." (Symbol.str key)])))
-                (list 'match parsed-val
-                      (list 'Result.Error error) (list 'Result.Error error)
-                      (list 'Result.Success sym) hole)))))
-
-    (defndynamic try-get-values-for-struct [ms parsed path]
-     (reduce (fn [acc y] (fn [hole] (acc ((Sheriff.JSON.try-get-value-for-key y parsed path) hole))))
-             (fn [hole] hole)
-             ms))
-
-    (defndynamic build-struct [t ms parsed path]
-      ((Sheriff.JSON.try-get-values-for-struct ms parsed path)
-       (list 'Result.Success
-        (cons (Symbol.prefix t 'init)
-              (map (fn [triple] (car triple))
-                   ms)))))
-
-    (defndynamic get-value [t parsed path]
-     (if (Introspect.struct? (eval t))
-      (Sheriff.JSON.build-struct t (Sheriff.JSON.create-key-sym (members t)) parsed path)
-      (if (list? t)
-        (macro-error (String.concat [(str t) " is not supported by unmarshall"]))
-        (case t
-          'String (list 'Sheriff.JSON.get-string (list 'ref parsed) path)
-          'Bool (list 'Sheriff.JSON.get-bool (list 'ref parsed) path)
-          'Double (list 'Sheriff.JSON.get-number (list 'ref parsed) path)
-          'Int (list 'Result.map
-                 (list 'Sheriff.JSON.get-number (list 'ref parsed) path)
-                 (list 'ref 'Double.to-int))
-          (macro-error (String.concat [(str t) " is not supported by unmarshall"]))))))
-
-    (defmacro unmarshall [t string]
-      (let [ref-str (gensym-with 'reference)
-            top-parsed (gensym-with 'top-parsed)
-            success (gensym-with 'success)
+  (defndynamic try-get-value-for-key [ms parsed path]
+    (fn [hole]
+      (let [sym (car ms)
+            key (cadr ms)
+            typ (caddr ms)
+            parsed-val (gensym-with 'parsed)
             error (gensym-with 'error)]
-        (list (list 'fn [ref-str]
-                (list 'the (list 'Result t 'String)
-                           (list 'match (list 'Sheriff.JSON.parse ref-str)
-                             (list 'Result.Error error) (list 'Result.Error error)
-                             (list 'Result.Success success)
-                             (Sheriff.JSON.get-value t success ""))))
-              string)))))
+        (list 'let
+              (array parsed-val (SheriffJSON.get-value
+                                      typ
+                                      parsed
+                                      (String.concat [path "." (Symbol.str key)])))
+              (list 'match parsed-val
+                    (list 'Result.Error error) (list 'Result.Error error)
+                    (list 'Result.Success sym) hole)))))
+
+  (defndynamic try-get-values-for-struct [ms parsed path]
+   (reduce (fn [acc y] (fn [hole] (acc ((SheriffJSON.try-get-value-for-key y parsed path) hole))))
+           (fn [hole] hole)
+           ms))
+
+  (defndynamic build-struct [t ms parsed path]
+    ((SheriffJSON.try-get-values-for-struct ms parsed path)
+     (list 'Result.Success
+      (cons (Symbol.prefix t 'init)
+            (map (fn [triple] (car triple))
+                 ms)))))
+
+  (defndynamic get-value [t parsed path]
+   (if (Introspect.struct? (eval t))
+    (SheriffJSON.build-struct t (SheriffJSON.create-key-sym (eval (list 'members t))) parsed path)
+    (if (list? t)
+      (macro-error (String.concat [(str t) " is not supported by unmarshall"]))
+      (case t
+        'String (list 'SheriffJSON.get-string (list 'ref parsed) path)
+        'Bool (list 'SheriffJSON.get-bool (list 'ref parsed) path)
+        'Double (list 'SheriffJSON.get-number (list 'ref parsed) path)
+        'Int (list 'Result.map
+               (list 'SheriffJSON.get-number (list 'ref parsed) path)
+               (list 'ref 'Double.to-int))
+        (macro-error (String.concat [(str t) " is not supported by unmarshall"]))))))
+
+  (defmacro unmarshall [t string]
+    (let [ref-str (gensym-with 'reference)
+          top-parsed (gensym-with 'top-parsed)
+          success (gensym-with 'success)
+          error (gensym-with 'error)]
+      (list (list 'fn [ref-str]
+              (list 'the (list 'Result t 'String)
+                         (list 'match (list 'SheriffJSON.parse ref-str)
+                           (list 'Result.Error error) (list 'Result.Error error)
+                           (list 'Result.Success success)
+                           (SheriffJSON.get-value t success ""))))
+            string))))
 
 

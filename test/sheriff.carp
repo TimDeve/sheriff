@@ -11,8 +11,8 @@
 (deftest test
   (assert-equal test
     &(Result.Success @"{\"key-one\": \"val one\", \"keytwo\": \"Changed\"}")
-    (=> (Sheriff.JSON.unmarshall StringsStruct "{\"key-one\": \"val one\", \"keytwo\": \"val two\"}")
+    (=> (SheriffJSON.unmarshall StringsStruct "{\"key-one\": \"val one\", \"keytwo\": \"val two\"}")
         (Result.map &(fn [struct] (StringsStruct.set-keytwo struct @"Changed")))
-        (Result.map &(fn [struct] (Sheriff.JSON.marshall StringsStruct &struct)))
+        (Result.map &(fn [struct] (SheriffJSON.marshall StringsStruct &struct)))
         (ref))
     "Unmarshall and marshall together"))

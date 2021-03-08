@@ -1,176 +1,172 @@
 (use Result)
 
-(defmodule Sheriff
- (defmodule JSON
-  (defmodule Lexer
-    (deftype Tok
-     LeftCurly
-     RightCurly
-     LeftBracket
-     RightBracket
-     Colon
-     Comma
-     Null
-     (Str [String])
-     (Bol [Bool])
-     (Num [String]))
+(deftype SheriffTok
+ LeftCurly
+ RightCurly
+ LeftBracket
+ RightBracket
+ Colon
+ Comma
+ Null
+ (Str [String])
+ (Bol [Bool])
+ (Num [String]))
 
-    (defmodule Tok
-     (defn to-int [t]
-      (match-ref t
-       LeftCurly 0
-       RightCurly 1
-       LeftBracket 2
-       RightBracket 3
-       Colon 4
-       Comma 5
-       Null 6
-       (Str _) 7
-       (Bol _) 8
-       (Num _) 9))
+(defmodule SheriffTok
+ (defn to-int [t]
+  (match-ref t
+   LeftCurly 0
+   RightCurly 1
+   LeftBracket 2
+   RightBracket 3
+   Colon 4
+   Comma 5
+   Null 6
+   (Str _) 7
+   (Bol _) 8
+   (Num _) 9))
 
-     (defn is-a [a b]
-      (Int.= (to-int a) (to-int b))))
+ (defn is-a [a b]
+  (Int.= (to-int a) (to-int b))))
 
-    (use Sheriff.JSON.Lexer)
+(defmodule SheriffLexer
+  (defn is-white-space? [char]
+    (StaticArray.any? &(fn [c] (= char c)) $[\space \tab \newline \return]))
 
-    (defn is-white-space? [char]
-      (StaticArray.any? &(fn [c] (= char c)) $[\space \tab \newline \return]))
+  (defn is-null? [i chrs]
+    (if (< (+ i 3) (Array.length chrs))
+      (StaticArray.all? &copy
+                        $[(= \n @(Array.unsafe-nth chrs i))
+                          (= \u @(Array.unsafe-nth chrs (+ 1 i)))
+                          (= \l @(Array.unsafe-nth chrs (+ 2 i)))
+                          (= \l @(Array.unsafe-nth chrs (+ 3 i)))])
+      false))
 
-    (defn is-null? [i chrs]
-      (if (< (+ i 3) (Array.length chrs))
-        (StaticArray.all? &copy
-                          $[(= \n @(Array.unsafe-nth chrs i))
-                            (= \u @(Array.unsafe-nth chrs (+ 1 i)))
-                            (= \l @(Array.unsafe-nth chrs (+ 2 i)))
-                            (= \l @(Array.unsafe-nth chrs (+ 3 i)))])
-        false))
+  (defn is-true? [i chrs]
+    (if (< (+ i 3) (Array.length chrs))
+      (StaticArray.all? &copy
+                        $[(= \t @(Array.unsafe-nth chrs i))
+                          (= \r @(Array.unsafe-nth chrs (+ 1 i)))
+                          (= \u @(Array.unsafe-nth chrs (+ 2 i)))
+                          (= \e @(Array.unsafe-nth chrs (+ 3 i)))])
+      false))
 
-    (defn is-true? [i chrs]
-      (if (< (+ i 3) (Array.length chrs))
-        (StaticArray.all? &copy
-                          $[(= \t @(Array.unsafe-nth chrs i))
-                            (= \r @(Array.unsafe-nth chrs (+ 1 i)))
-                            (= \u @(Array.unsafe-nth chrs (+ 2 i)))
-                            (= \e @(Array.unsafe-nth chrs (+ 3 i)))])
-        false))
+  (defn is-false? [i chrs]
+    (if (< (+ i 4) (Array.length chrs))
+      (StaticArray.all? &copy
+                        $[(= \f @(Array.unsafe-nth chrs i))
+                          (= \a @(Array.unsafe-nth chrs (+ 1 i)))
+                          (= \l @(Array.unsafe-nth chrs (+ 2 i)))
+                          (= \s @(Array.unsafe-nth chrs (+ 3 i)))
+                          (= \e @(Array.unsafe-nth chrs (+ 4 i)))])
+      false))
 
-    (defn is-false? [i chrs]
-      (if (< (+ i 4) (Array.length chrs))
-        (StaticArray.all? &copy
-                          $[(= \f @(Array.unsafe-nth chrs i))
-                            (= \a @(Array.unsafe-nth chrs (+ 1 i)))
-                            (= \l @(Array.unsafe-nth chrs (+ 2 i)))
-                            (= \s @(Array.unsafe-nth chrs (+ 3 i)))
-                            (= \e @(Array.unsafe-nth chrs (+ 4 i)))])
-        false))
+  (defn lex-number [i chrs]
+    (let-do [done false char-str (the (Array Char) [])]
+      (while-do (and (< i (Array.length chrs))
+                     (not done))
+        (let [char (the (Ref Char) (Array.unsafe-nth chrs i))]
+          (if (not (StaticArray.any? &(fn [c] (= char c))
+                                     $[\0 \1 \2 \3 \4 \5 \6 \7 \8 \9 \e \.]))
+            (set! done true)
+            (do
+              (Array.push-back! &char-str @char)
+              (update! i inc)))))
+      (Success (Pair.init i (SheriffTok.Num (String.from-chars &char-str))))))
 
-    (defn lex-number [i chrs]
-      (let-do [done false char-str (the (Array Char) [])]
-        (while-do (and (< i (Array.length chrs))
-                       (not done))
-          (let [char (the (Ref Char) (Array.unsafe-nth chrs i))]
-            (if (not (StaticArray.any? &(fn [c] (= char c))
-                                       $[\0 \1 \2 \3 \4 \5 \6 \7 \8 \9 \e \.]))
-              (set! done true)
-              (do
-                (Array.push-back! &char-str @char)
-                (update! i inc)))))
-        (Success (Pair.init i (Tok.Num (String.from-chars &char-str))))))
+  (defn lex-string [i chrs]
+    (let [error false done false char-str (the (Array Char) [])]
+      (do
+        (while (and (< i (Array.length chrs))
+                    (not done))
+         (let [char @(Array.unsafe-nth chrs i)]
+          (if (and (= \" char) (not (= \\ @(Array.unsafe-nth chrs (- i 1)))))
+            (set! done true)
+            (do
+              (Array.push-back! &char-str char)
+              (update! i inc)
+              (if (= i (Array.length chrs)) (set! error true) ())))))
+        (if error
+          (Error @"Unmatched double-quote")
+          (Success (Pair.init i (SheriffTok.Str (String.from-chars &char-str))))))))
 
-    (defn lex-string [i chrs]
-      (let [error false done false char-str (the (Array Char) [])]
-        (do
-          (while (and (< i (Array.length chrs))
-                      (not done))
-           (let [char @(Array.unsafe-nth chrs i)]
-            (if (and (= \" char) (not (= \\ @(Array.unsafe-nth chrs (- i 1)))))
-              (set! done true)
-              (do
-                (Array.push-back! &char-str char)
-                (update! i inc)
-                (if (= i (Array.length chrs)) (set! error true) ())))))
-          (if error
-            (Error @"Unmatched double-quote")
-            (Success (Pair.init i (Tok.Str (String.from-chars &char-str))))))))
-
-    (defn lex-i [i chrs res-toks]
-      (match res-toks
-        (Error e) (Error e)
+  (defn lex-i [i chrs res-toks]
+    (match res-toks
+      (Error e) (Error e)
+      (Success toks)
+      (if (>= i (Array.length chrs))
         (Success toks)
-        (if (>= i (Array.length chrs))
-          (Success toks)
-          (let [current-char (Array.unsafe-nth chrs i)]
-            (if (is-white-space? current-char)
-              (lex-i (inc i) chrs (the (Result (Array Sheriff.JSON.Lexer.Tok) String) (Success toks)))
-              (if (Char.num? @current-char)
-                (let [num-pair (lex-number i chrs)]
-                 (match num-pair
-                   (Error e) (Error e)
-                   (Success pair)
-                   (lex-i @(Pair.a &pair)
-                       chrs
-                       (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
-                        (Success (Array.push-back toks @(Pair.b &pair)))))))
-                (case @current-char
-                  \{ (lex-i (inc i)
+        (let [current-char (Array.unsafe-nth chrs i)]
+          (if (is-white-space? current-char)
+            (lex-i (inc i) chrs (the (Result (Array SheriffTok) String) (Success toks)))
+            (if (Char.num? @current-char)
+              (let [num-pair (lex-number i chrs)]
+               (match num-pair
+                 (Error e) (Error e)
+                 (Success pair)
+                 (lex-i @(Pair.a &pair)
+                     chrs
+                     (the (Result (Array SheriffTok) String)
+                      (Success (Array.push-back toks @(Pair.b &pair)))))))
+              (case @current-char
+                \{ (lex-i (inc i)
+                          chrs
+                          (the (Result (Array SheriffTok) String)
+                           (Success (Array.push-back toks (SheriffTok.LeftCurly)))))
+                \} (lex-i (inc i)
+                          chrs
+                          (the (Result (Array SheriffTok) String)
+                           (Success (Array.push-back toks (SheriffTok.RightCurly)))))
+                \[ (lex-i (inc i)
+                          chrs
+                          (the (Result (Array SheriffTok) String)
+                           (Success (Array.push-back toks (SheriffTok.LeftBracket)))))
+                \] (lex-i (inc i)
+                          chrs
+                          (the (Result (Array SheriffTok) String)
+                           (Success (Array.push-back toks (SheriffTok.RightBracket)))))
+                \: (lex-i (inc i)
+                          chrs
+                          (the (Result (Array SheriffTok) String)
+                           (Success (Array.push-back toks (SheriffTok.Colon)))))
+                \, (lex-i (inc i)
+                          chrs
+                          (the (Result (Array SheriffTok) String)
+                           (Success (Array.push-back toks (SheriffTok.Comma)))))
+                \n (if (not (is-null? i chrs))
+                     (Error @"Failed to lex null token")
+                     (lex-i (+ 4 i)
                             chrs
-                            (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
-                             (Success (Array.push-back toks (Tok.LeftCurly)))))
-                  \} (lex-i (inc i)
+                            (the (Result (Array SheriffTok) String)
+                             (Success (Array.push-back toks (SheriffTok.Null))))))
+                \t (if (not (is-true? i chrs))
+                     (Error @"Failed to lex true token")
+                     (lex-i (+ 4 i)
                             chrs
-                            (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
-                             (Success (Array.push-back toks (Tok.RightCurly)))))
-                  \[ (lex-i (inc i)
+                            (the (Result (Array SheriffTok) String)
+                             (Success (Array.push-back toks (SheriffTok.Bol true))))))
+                \f (if (not (is-false? i chrs))
+                     (Error @"Failed to lex false token")
+                     (lex-i (+ 5 i)
                             chrs
-                            (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
-                             (Success (Array.push-back toks (Tok.LeftBracket)))))
-                  \] (lex-i (inc i)
-                            chrs
-                            (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
-                             (Success (Array.push-back toks (Tok.RightBracket)))))
-                  \: (lex-i (inc i)
-                            chrs
-                            (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
-                             (Success (Array.push-back toks (Tok.Colon)))))
-                  \, (lex-i (inc i)
-                            chrs
-                            (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
-                             (Success (Array.push-back toks (Tok.Comma)))))
-                  \n (if (not (is-null? i chrs))
-                       (Error @"Failed to lex null token")
-                       (lex-i (+ 4 i)
-                              chrs
-                              (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
-                               (Success (Array.push-back toks (Tok.Null))))))
-                  \t (if (not (is-true? i chrs))
-                       (Error @"Failed to lex true token")
-                       (lex-i (+ 4 i)
-                              chrs
-                              (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
-                               (Success (Array.push-back toks (Tok.Bol true))))))
-                  \f (if (not (is-false? i chrs))
-                       (Error @"Failed to lex false token")
-                       (lex-i (+ 5 i)
-                              chrs
-                              (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
-                               (Success (Array.push-back toks (Tok.Bol false))))))
-                  \" (let [string-pair (lex-string (inc i) chrs)]
-                      (match string-pair
-                        (Error e) (Error e)
-                        (Success pair)
-                        (lex-i (inc @(Pair.a &pair))
-                            chrs
-                            (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
-                             (Success (Array.push-back toks @(Pair.b &pair)))))))
-                 (Error (String.append "Unexpect char = " &(str @current-char))))))))))
+                            (the (Result (Array SheriffTok) String)
+                             (Success (Array.push-back toks (SheriffTok.Bol false))))))
+                \" (let [string-pair (lex-string (inc i) chrs)]
+                    (match string-pair
+                      (Error e) (Error e)
+                      (Success pair)
+                      (lex-i (inc @(Pair.a &pair))
+                          chrs
+                          (the (Result (Array SheriffTok) String)
+                           (Success (Array.push-back toks @(Pair.b &pair)))))))
+               (Error (String.append "Unexpect char = " &(str @current-char))))))))))
 
-    (sig lex (Fn [(Ref String)] (Result (Array Sheriff.JSON.Lexer.Tok) String)))
-    (defn lex [s]
-     (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
-      (let [chrs (chars s)]
-       (lex-i 0
-              &chrs
-              (the (Result (Array Sheriff.JSON.Lexer.Tok) String)
-                   (Success [])))))))))
+  (sig lex (Fn [(Ref String)] (Result (Array SheriffTok) String)))
+  (defn lex [s]
+   (the (Result (Array SheriffTok) String)
+    (let [chrs (chars s)]
+     (lex-i 0
+            &chrs
+            (the (Result (Array SheriffTok) String)
+                 (Success [])))))))
 

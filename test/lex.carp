@@ -4,8 +4,8 @@
 
 (use Test)
 
-(use Sheriff.JSON.Lexer)
-(use Sheriff.JSON.Lexer.Tok)
+(use SheriffLexer)
+(use SheriffTok)
 
 (deftest test
   (assert-equal test
