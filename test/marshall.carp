@@ -16,8 +16,10 @@
               arr (Array Double)
               nil (Maybe String)
               int Int])
+(derive All to-json)
 
 (deftype Nested [key-one ABool key-two ADouble])
+(derive Nested to-json)
 
 (deftest test
   (assert-equal test
@@ -96,9 +98,26 @@
    "All together now")
 
  (assert-equal test
+   "{\"arr\": [1, 2], \"int\": 42, \"dang\": 3.14, \"soom\": \"Carp\", \"nil\": \"maybe\", \"bam\": false}"
+   &(to-json &(All.init false
+                         3.14
+                         @"Carp"
+                         [1.0, 2.0]
+                         (Maybe.Just @"maybe")
+                         42))
+   "All together now with to-json")
+
+ (assert-equal test
    "{\"key-two\": {\"val\": 14.44}, \"key-one\": {\"boooo\": true}}"
    &((fn [] (SheriffJSON.marshall Nested &(Nested.init
                                            (ABool.init true)
                                            (ADouble.init 14.44)))))
-   "Works with nested structs"))
+   "Works with nested structs")
+
+ (assert-equal test
+   "{\"key-two\": {\"val\": 14.44}, \"key-one\": {\"boooo\": true}}"
+   &(to-json &(Nested.init
+               (ABool.init true)
+               (ADouble.init 14.44)))
+   "Works with nested structs and to-json"))
 

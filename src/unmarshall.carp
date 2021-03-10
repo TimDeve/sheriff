@@ -1,5 +1,7 @@
 (load "parse.carp")
 
+(definterface from-json (Fn [(Ref String)] (Result a String)))
+
 (defmodule SheriffJSON
   (defndynamic create-key-sym [m]
    (map
@@ -48,17 +50,27 @@
                (list 'ref 'Double.to-int))
         (macro-error (String.concat [(str t) " is not supported by unmarshall"]))))))
 
+
+  (defndynamic unmarshall-internal [t string]
+    (let [top-parsed (gensym-with 'top-parsed)
+          success (gensym-with 'success)
+          error (gensym-with 'error)]
+      (list 'the (list 'Result t 'String)
+                 (list 'match (list 'SheriffJSON.parse string)
+                   (list 'Result.Error error) (list 'Result.Error error)
+                   (list 'Result.Success success)
+                   (SheriffJSON.get-value t success "")))))
+
   (defmacro unmarshall [t string]
     (let [ref-str (gensym-with 'reference)
           top-parsed (gensym-with 'top-parsed)
           success (gensym-with 'success)
           error (gensym-with 'error)]
       (list (list 'fn [ref-str]
-              (list 'the (list 'Result t 'String)
-                         (list 'match (list 'SheriffJSON.parse ref-str)
-                           (list 'Result.Error error) (list 'Result.Error error)
-                           (list 'Result.Success success)
-                           (SheriffJSON.get-value t success ""))))
+              (SheriffJSON.unmarshall-internal t ref-str))
             string))))
 
+(make-deriver 'from-json ['string]
+  (fn [t]
+    (SheriffJSON.unmarshall-internal t 'string)))
 

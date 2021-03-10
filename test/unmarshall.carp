@@ -15,6 +15,7 @@
             (and (= (deci a) (deci b))
                  (and (= (int a) (int b))
                       (= (num a) (num b))))))))
+(derive AllStruct from-json)
 
 (deftype StringsStruct [key-one String keytwo String])
 (defmodule StringsStruct
@@ -74,5 +75,10 @@
   (assert-equal test
     &(Result.Success (AllStruct.init @"Hello Hello" false 1234.5678 8 42.0))
     &(SheriffJSON.unmarshall AllStruct "{\"st\": \"Hello Hello\", \"num\": 42, \"deci\": 1234.5678, \"bol\": false, \"int\": 8}")
-    "Works with struct with all supported types"))
+    "Works with struct with all supported types")
+
+  (assert-equal test
+    &(Result.Success (AllStruct.init @"Hello Hello" false 1234.5678 8 42.0))
+    &(AllStruct.from-json "{\"st\": \"Hello Hello\", \"num\": 42, \"deci\": 1234.5678, \"bol\": false, \"int\": 8}")
+    "Works with struct with all supported types & from-json"))
 
