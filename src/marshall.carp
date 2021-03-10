@@ -1,5 +1,7 @@
 (load "dsl.carp")
 
+(definterface to-json (Fn [(Ref a)] String))
+
 (defmodule SheriffJSON
   (defndynamic make-array [lst]
     (let [arr (gensym-with 'arr)]
@@ -102,3 +104,8 @@
     (let [rf (gensym-with 'reference)]
        (list 'let (array rf (list 'the (list 'Ref t) v))
              (SheriffJSON.stringify t rf)))))
+
+(make-deriver 'to-json ['v]
+  (fn [t]
+    (SheriffJSON.stringify t 'v)))
+

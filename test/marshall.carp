@@ -7,6 +7,7 @@
 (use Test)
 
 (deftype ABool [boooo Bool])
+(derive ABool to-json)
 (deftype ADouble [val Double])
 (deftype AString [sam String])
 (deftype All [bam Bool
@@ -68,6 +69,11 @@
    "{\"boooo\": true}"
    &(SheriffJSON.marshall ABool &(ABool.init true))
    "Works with Bool")
+
+ (assert-equal test
+   "{\"boooo\": true}"
+   &(to-json &(ABool.init true))
+   "Works with to-json interface")
 
  (assert-equal test
    "{\"val\": 10}"
