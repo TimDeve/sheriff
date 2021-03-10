@@ -62,13 +62,10 @@
 
   (defndynamic create-pair [t v]
     (fn [type-pair]
-      ; Not using the gensym, just there as a workaround for
-      ; https://github.com/carp-lang/Carp/issues/1181
-      (let [_gen_new_sym (gensym)]
-        (list 'Pair.init
-           (list 'copy (str (car type-pair)))
-           (SheriffJSON.to-str (cadr type-pair)
-                           (list (Symbol.prefix t (car type-pair)) v))))))
+      (list 'Pair.init
+         (list 'copy (str (car type-pair)))
+         (SheriffJSON.to-str (cadr type-pair)
+                         (list (Symbol.prefix t (car type-pair)) v)))))
 
   (defndynamic create-arr-for-map [t v]
     (list 'the
