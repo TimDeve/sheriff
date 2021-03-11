@@ -1,0 +1,61 @@
+(load "Test.carp")
+
+(load "../src/json-node.carp")
+
+(use-all Test SheriffJsonNode SheriffJsonNodeBox)
+
+(deftest test
+  (assert-equal test
+    0l
+    (do
+      (Debug.reset-memory-balance!)
+      (ignore (box (Str @"Box")))
+      (Debug.memory-balance))
+    "Doesn't leak - Simple box")
+
+  (assert-equal test
+    0l
+    (do
+      (Debug.reset-memory-balance!)
+      (ignore [(box (Bol false)) @&(box (Bol false)) (box (Str @"Ok"))])
+      (Debug.memory-balance))
+    "Doesn't leak - Array of box")
+
+  (assert-equal test
+    0l
+    (do
+      (Debug.reset-memory-balance!)
+      (ignore {@"key" (box (Bol true))})
+      (Debug.memory-balance))
+    "Doesn't leak - Map of box")
+
+  (assert-equal test
+    0l
+    (do
+      (Debug.reset-memory-balance!)
+      (ignore (Arr [(box (Bol false))]))
+      (Debug.memory-balance))
+    "Doesn't leak - Array of box in sumtype")
+
+  (assert-equal test
+    0l
+    (do
+      (Debug.reset-memory-balance!)
+      (let [arr [(box (Bol false))]]
+        (ignore @&arr))
+      (Debug.memory-balance))
+    "Doesn't leak - Copying value")
+
+  (assert-equal test
+    "Hello"
+    &(match-ref (peek &(box (Str @"Hello")))
+       (Str s) @s
+       _       @"Failed")
+    "Peek into value")
+
+  (assert-equal test
+    "Hello"
+    &(match (unbox (box (Str @"Hello")))
+       (Str s) s
+       _       @"Failed")
+    "Unbox value"))
