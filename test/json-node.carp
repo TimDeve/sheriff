@@ -1,3 +1,5 @@
+(Debug.sanitize-addresses)
+
 (load "Test.carp")
 
 (load "../src/json-node.carp")
