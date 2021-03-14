@@ -209,5 +209,53 @@
     &(Result.and-then
              (parse "{\"a-key\": null}")
              &(fn [p] (get-maybe-bool &p ".a-key")))
-    "Parses maybe bool in object, nothing"))
+    "Parses maybe bool in object, nothing")
 
+  (assert-equal test
+    &(Result.Error @"Expected colon but got a different token")
+    &(Result.map
+             (parse "{\"a-key\" null}")
+             &(fn [_] @"Shoulda Failed"))
+    "Errors when a colon is missing I")
+
+  (assert-equal test
+    &(Result.Error @"Expected colon but got a different token")
+    &(Result.map
+             (parse "{\"a-key\"}")
+             &(fn [_] @"Shoulda Failed"))
+    "Errors when a colon is missing II")
+
+  (assert-equal test
+    &(Result.Error @"Expected colon but got end of tokens")
+    &(Result.map
+             (parse "{\"a-key\"")
+             &(fn [_] @"Shoulda Failed"))
+    "Errors when a colon is missing - end of input")
+
+  (assert-equal test
+    &(Result.Error @"Expected key but got a different token")
+    &(Result.map
+             (parse "{1337")
+             &(fn [_] @"Shoulda Failed"))
+    "Errors when a key is missing")
+
+  (assert-equal test
+    &(Result.Error @"Expected key but got end of tokens")
+    &(Result.map
+             (parse "{")
+             &(fn [_] @"Shoulda Failed"))
+    "Errors when a key is missing - end of input")
+
+  (assert-equal test
+    &(Result.Success false)
+    &(Result.and-then
+             (parse "{\"an-obj\": {\"k\": 1337}, \"a-key\": false, \"another-key\": \"string\"}")
+             &(fn [p] (get-bool &p ".a-key")))
+    "Can parse nested objects")
+
+  (assert-equal test
+    &(Result.Success @"Success")
+    &(Result.map
+             (parse "{}")
+             &(fn [p] @"Success"))
+    "Can parse empty objects"))
