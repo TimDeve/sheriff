@@ -39,9 +39,9 @@
                obj (the (Map String SheriffJsonNodeBox) (Map.create))
                obj* &obj
                done false]
-        (while-do (and* (not done)
-                        (not (just? &error))
-                        (not (next-tok-is-closing-curly toks i)))
+        (while-do (and (not done)
+                       (not (just? &error))
+                       (not (next-tok-is-closing-curly toks i)))
          (match (=> (get-key toks i)
                     (and-then &(fn [key-str] (check-colon toks i key-str)))
                     (and-then &(fn [key-str]
