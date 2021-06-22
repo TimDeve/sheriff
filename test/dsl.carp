@@ -59,6 +59,11 @@
     "Works with null")
 
   (assert-equal test
+    "null"
+    &(stringify (zero))
+    "Works with zero")
+
+  (assert-equal test
     "[]"
     &(stringify (a []))
     "Works with empty arrays")
@@ -71,6 +76,12 @@
   (assert-equal test
     "{}"
     &(stringify (o {}))
+    "Works with empty objects")
+
+  (assert-equal test
+    "{}"
+    &(let [mapodsl {@"key" (o {})}]
+      (stringify (Map.get &mapodsl "key")))
     "Works with empty objects")
 
   (assert-equal test

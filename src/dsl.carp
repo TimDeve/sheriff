@@ -53,4 +53,6 @@
                         (String.join ", ")))))
 
   (sig null (Fn [] SheriffDSL))
-  (defn null [] (SheriffDSL.Node @"null")))
+  (defn null [] (SheriffDSL.Node @"null"))
+  (implements zero null))
+
