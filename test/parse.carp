@@ -147,7 +147,6 @@
              &(fn [p] (get-string &p ".another-key")))
     "Parses strings in object")
 
-
   (assert-equal test
     &(Result.Success (Maybe.Just @"a string"))
     &(Result.and-then
@@ -247,11 +246,18 @@
     "Errors when a key is missing - end of input")
 
   (assert-equal test
-    &(Result.Success false)
+    &(Result.Success 1337.0)
     &(Result.and-then
              (parse "{\"an-obj\": {\"k\": 1337}, \"a-key\": false, \"another-key\": \"string\"}")
-             &(fn [p] (get-bool &p ".a-key")))
-    "Can parse nested objects")
+             &(fn [j] (get-number &j ".an-obj.k")))
+   "Can parse nested objects")
+
+  (assert-equal test
+    &(Result.Success 42.0)
+    &(Result.and-then
+             (parse "{\"deeply\": {\"nested\": {\"objects\": 42}}}")
+             &(fn [j] (get-number &j ".deeply.nested.objects")))
+   "Can parse deeply nested objects")
 
   (assert-equal test
     &(Result.Success @"Success")
@@ -259,3 +265,4 @@
              (parse "{}")
              &(fn [p] @"Success"))
     "Can parse empty objects"))
+

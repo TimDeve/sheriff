@@ -90,17 +90,21 @@
       (map (parse-toks &tokens 0)
            &(fn [pair] @(Pair.a &pair)))))
 
+  (defn get-obj-value [json key]
+   (match-ref json
+     (SheriffJsonNode.Obj m) (SheriffJsonNodeBox.unbox (Map.get m key))
+     _                       (SheriffJsonNode.Null)))
+
+  (sig get (Fn [(Ref SheriffJsonNode) (Ref String)] SheriffJsonNode))
   (defn get [json s]
-    (let [path (String.split-by s &[\.])]
-     (Array.reduce
-         &(fn [i key]
-           (if (= key "")
-             @json
-             (match-ref json
-               (SheriffJsonNode.Obj m) (SheriffJsonNodeBox.unbox (Map.get m key))
-               _ (SheriffJsonNode.Null))))
-         (SheriffJsonNode.Null)
-         &path)))
+    (let [path (String.split-by s &[\.])
+          current-value @json]
+     (do
+       (foreach [key &path]
+        (set! current-value
+              (if (= key "") current-value
+                             (get-obj-value &current-value key))))
+       current-value)))
 
   (defn get-string [json s]
     (match (get json s)
