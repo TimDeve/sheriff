@@ -6,6 +6,11 @@
 
 (use SheriffJSON)
 
+(defn get-from-arr [json i]
+  (unbox (match json
+           (Arr arr) (or-zero (nth &arr i))
+           _         (zero))))
+
 (deftest test
   (assert-equal test
     &(Result.Success @"wow")
@@ -264,5 +269,27 @@
     &(Result.map
              (parse "{}")
              &(fn [p] @"Success"))
-    "Can parse empty objects"))
+    "Can parse empty objects")
+
+  (assert-equal test
+    &(Result.Success 0)
+    &(Result.and-then
+             (parse "[]")
+             &(fn [p] (match p (Arr arr) (Success (length &arr))
+                               _         (Error @"Not an array?"))))
+    "Can parse empty array")
+
+  (assert-equal test
+    &(Result.Success 3.14)
+    &(Result.and-then
+             (parse "[3.14]")
+             &(fn [p] (get-number &(get-from-arr p 0) ".")))
+    "Can parse array with a single thing in it")
+
+  (assert-equal test
+    &(Result.Success 42.0)
+    &(Result.and-then
+             (parse "[\"string\", 42, false]")
+             &(fn [p] (get-number &(get-from-arr p 1) ".")))
+    "Can parse array with things in it"))
 

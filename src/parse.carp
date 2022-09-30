@@ -64,6 +64,42 @@
           (Nothing)  (Success (Pair.init (SheriffJsonNode.Obj obj) (inc i)))
           (Just err) (Error err)))))
 
+  (defn- next-tok-is-closing-bracket [toks i]
+    (let [maybe-next-tok (Array.nth toks i)]
+      (match maybe-next-tok
+        (Just next-tok) (match next-tok
+                          (SheriffTok.RightBracket) true
+                          _                       false)
+        _               false)))
+
+  (defn- parse-array [toks index]
+    (with SheriffJsonNodeBox
+      (let-do [error (Nothing)
+               i     index
+               arr   (the (Array SheriffJsonNodeBox) [])
+               arri     0
+               arr*  &arr
+               done  false]
+        (while-do (and (not done)
+                       (not (just? &error))
+                       (not (next-tok-is-closing-bracket toks i)))
+         (match (parse-toks toks i)
+           (Success pair) (do (push-back! arr* (box @(Pair.a &pair)))
+                              (set! i @(Pair.b &pair)))
+           (Error err)    (set! error (Just err)))
+         (unless (just? &error)
+          (let [maybe-sep (Array.nth toks i)]
+            (match maybe-sep
+              (Just sep)
+              (match sep
+               (SheriffTok.Comma) (set! i (inc i))
+               (SheriffTok.RightBracket) (set! done true)
+               _ (set! error (Just @"Expected Comma or RightBracket but got a different token")))
+              _ (set! error (Just @"Expected Comma or RightBracket but got end of tokens"))))))
+        (match error
+          (Nothing)  (Success (Pair.init (SheriffJsonNode.Arr arr) (inc i)))
+          (Just err) (Error err)))))
+
   (defn- parse-num [num-str i]
     (with SheriffJsonNode
       (match (Double.from-string num-str)
@@ -73,14 +109,15 @@
   (defn- parse-toks [toks i]
     (with SheriffJsonNode
       (with SheriffJsonNodeBox
-        (match-ref (unsafe-nth toks @&i)
-          (SheriffTok.Null)        (Success (Pair.init (Null) (inc i)))
-          (SheriffTok.Str s)       (Success (Pair.init (Str @s) (inc i)))
-          (SheriffTok.Bol b)       (Success (Pair.init (Bol @b) (inc i)))
-          (SheriffTok.Num num-str) (parse-num num-str i)
-          (SheriffTok.LeftCurly)   (parse-obj toks (inc i))
-          (SheriffTok.LeftBracket) (Error @"Arrays are not implemented")
-          _                        (Error @"Unexpected token")))))
+        (let [tok (unsafe-nth toks @&i)]
+          (match-ref tok
+            (SheriffTok.Null)        (Success (Pair.init (Null) (inc i)))
+            (SheriffTok.Str s)       (Success (Pair.init (Str @s) (inc i)))
+            (SheriffTok.Bol b)       (Success (Pair.init (Bol @b) (inc i)))
+            (SheriffTok.Num num-str) (parse-num num-str i)
+            (SheriffTok.LeftCurly)   (parse-obj toks (inc i))
+            (SheriffTok.LeftBracket) (parse-array toks (inc i))
+            _                        (Error (str* "Unexpected token: " tok)))))))
 
   (sig parse (Fn [(Ref String)] (Result SheriffJsonNode String)))
   (defn parse [s]

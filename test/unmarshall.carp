@@ -7,34 +7,17 @@
 (use Test)
 
 (deftype AllStruct [st String bol Bool deci Double int Int num Double])
-(defmodule AllStruct
- (implements = =)
- (defn = [a b]
-  (and (= (st a) (st b))
-       (and (= (bol a) (bol b))
-            (and (= (deci a) (deci b))
-                 (and (= (int a) (int b))
-                      (= (num a) (num b))))))))
+(derive AllStruct =)
 (derive AllStruct from-json)
 
 (deftype StringsStruct [key-one String keytwo String])
-(defmodule StringsStruct
- (implements = =)
- (defn = [a b]
-  (and (= (key-one a) (key-one b))
-       (= (keytwo a) (keytwo b)))))
+(derive StringsStruct =)
 
 (deftype BoolStruct [key-one Bool])
-(defmodule BoolStruct
- (implements = =)
- (defn = [a b]
-  (= (key-one a) (key-one b))))
+(derive BoolStruct =)
 
 (deftype NumberStruct [key-one Double])
-(defmodule NumberStruct
- (implements = =)
- (defn = [a b]
-  (= (key-one a) (key-one b))))
+(derive NumberStruct =)
 
 (deftest test
   (assert-equal test
