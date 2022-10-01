@@ -1,0 +1,87 @@
+(load "./lex.carp")
+(load "./json-node.carp")
+
+(use Maybe)
+(use Result)
+(use Array)
+(use Map)
+
+(deftype SheriffJSONGetAccess
+ (Key [String])
+ (Idx [Int]))
+
+(defmodule SheriffJSONGetAccess
+  (sig id (Fn [(Array SheriffJSONGetAccess)] (Array SheriffJSONGetAccess)))
+  (defn id [a] a)
+
+  (sig from-str (Fn [(Ref String)] (Array SheriffJSONGetAccess)))
+  (defn from-str [s]
+    (copy-map &(fn [s] (Key @s)) &(String.split-by s &[\.])))
+
+  (defn str [arr]
+    (String.join ""
+      &(copy-map &(fn [t] (match-ref t (Key s) (str* "." s) (Idx i) (str* "[" i "]")))
+                 (the (Ref (Array SheriffJSONGetAccess)) arr))))
+  (implements str str))
+
+(definterface into-sheriff-json-get-access (Fn [a] (Array SheriffJSONGetAccess)))
+(implements into-sheriff-json-get-access SheriffJSONGetAccess.id)
+(implements into-sheriff-json-get-access SheriffJSONGetAccess.from-str)
+
+(defmodule SheriffJSON
+  (defn- get-obj-value [json key]
+   (match-ref json
+     (SheriffJsonNode.Obj m) (SheriffJsonNodeBox.unbox (Map.get m key))
+     _                       (SheriffJsonNode.Null)))
+
+  (defn- get-arr-value [json idx]
+   (match-ref json
+     (SheriffJsonNode.Arr a) (SheriffJsonNodeBox.unbox (or-zero (nth a idx)))
+     _                       (SheriffJsonNode.Null)))
+
+  (sig get (Fn [(Ref SheriffJsonNode) a] SheriffJsonNode))
+  (defn get [json p]
+    (let [current-value @json
+          path (into-sheriff-json-get-access p)]
+     (do
+       (foreach [key &path]
+        (match-ref key
+          (Key s) (set! current-value
+                        (if (= s "") current-value
+                                     (get-obj-value &current-value s)))
+          (Idx i) (set! current-value (get-arr-value &current-value @i))))
+       current-value)))
+
+  (defn get-string [json s]
+    (match (get json s)
+      (SheriffJsonNode.Str st) (Success st)
+      _ (Error @"Value is not a string")))
+
+  (defn get-maybe-string [json s]
+    (match (get json s)
+      (SheriffJsonNode.Str st) (Success (Maybe.Just st))
+      SheriffJsonNode.Null (Success (Maybe.Nothing))
+      _ (Error @"Value is not a string or null")))
+
+  (defn get-number [json s]
+    (match (get json s)
+      (SheriffJsonNode.Num num) (Success num)
+      _ (Error @"Value is not a number")))
+
+  (defn get-maybe-number [json s]
+    (match (get json s)
+      (SheriffJsonNode.Num num) (Success (Maybe.Just num))
+      SheriffJsonNode.Null (Success (Maybe.Nothing))
+      _ (Error @"Value is not a number or null")))
+
+  (defn get-bool [json s]
+    (match (get json s)
+      (SheriffJsonNode.Bol b) (Success b)
+      _ (Error @"Value is not a boolean")))
+
+  (defn get-maybe-bool [json s]
+    (match (get json s)
+      (SheriffJsonNode.Bol b) (Success (Maybe.Just b))
+      SheriffJsonNode.Null (Success (Maybe.Nothing))
+      _ (Error @"Value is not a boolean or null"))))
+

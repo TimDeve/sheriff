@@ -125,54 +125,5 @@
       (Error err) (Error err)
       (Success tokens)
       (map (parse-toks &tokens 0)
-           &(fn [pair] @(Pair.a &pair)))))
-
-  (defn get-obj-value [json key]
-   (match-ref json
-     (SheriffJsonNode.Obj m) (SheriffJsonNodeBox.unbox (Map.get m key))
-     _                       (SheriffJsonNode.Null)))
-
-  (sig get (Fn [(Ref SheriffJsonNode) (Ref String)] SheriffJsonNode))
-  (defn get [json s]
-    (let [path (String.split-by s &[\.])
-          current-value @json]
-     (do
-       (foreach [key &path]
-        (set! current-value
-              (if (= key "") current-value
-                             (get-obj-value &current-value key))))
-       current-value)))
-
-  (defn get-string [json s]
-    (match (get json s)
-      (SheriffJsonNode.Str st) (Success st)
-      _ (Error (format "Value at '%s' is not a string" s))))
-
-  (defn get-maybe-string [json s]
-    (match (get json s)
-      (SheriffJsonNode.Str st) (Success (Maybe.Just st))
-      SheriffJsonNode.Null (Success (Maybe.Nothing))
-      _ (Error (format "Value at '%s' is not a string or null" s))))
-
-  (defn get-number [json s]
-    (match (get json s)
-      (SheriffJsonNode.Num num) (Success num)
-      _ (Error (format "Value at '%s' is not a number" s))))
-
-  (defn get-maybe-number [json s]
-    (match (get json s)
-      (SheriffJsonNode.Num num) (Success (Maybe.Just num))
-      SheriffJsonNode.Null (Success (Maybe.Nothing))
-      _ (Error (format "Value at '%s' is not a number or null" s))))
-
-  (defn get-bool [json s]
-    (match (get json s)
-      (SheriffJsonNode.Bol b) (Success b)
-      _ (Error (format "Value at '%s' is not a boolean" s))))
-
-  (defn get-maybe-bool [json s]
-    (match (get json s)
-      (SheriffJsonNode.Bol b) (Success (Maybe.Just b))
-      SheriffJsonNode.Null (Success (Maybe.Nothing))
-      _ (Error (format "Value at '%s' is not a boolean or null" s)))))
+           &(fn [pair] @(Pair.a &pair))))))
 
