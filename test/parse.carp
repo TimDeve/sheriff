@@ -1,6 +1,7 @@
 (load "Test.carp")
 
 (load "../src/parse.carp")
+(load "../src/get.carp")
 
 (use Test)
 
@@ -20,7 +21,7 @@
     "Parses string")
 
   (assert-equal test
-    &(Result.Error @"Value at '.' is not a string")
+    &(Result.Error @"Value is not a string")
     &(Result.and-then
              (parse "1")
              &(fn [p] (get-string &p ".")))
@@ -41,7 +42,7 @@
     "Parses maybe string, nothing")
 
   (assert-equal test
-    &(Result.Error @"Value at '.' is not a string or null")
+    &(Result.Error @"Value is not a string or null")
     &(Result.and-then
              (parse "true")
              &(fn [p] (get-maybe-string &p ".")))
@@ -69,7 +70,7 @@
     "Errors when parsing invalid number")
 
   (assert-equal test
-    &(Result.Error @"Value at '.' is not a number")
+    &(Result.Error @"Value is not a number")
     &(Result.and-then
              (parse "\"wow\"")
              &(fn [p] (get-number &p ".")))
@@ -90,7 +91,7 @@
     "Parses maybe number, nothing")
 
   (assert-equal test
-    &(Result.Error @"Value at '.' is not a number or null")
+    &(Result.Error @"Value is not a number or null")
     &(Result.and-then
              (parse "false")
              &(fn [p] (get-maybe-number &p ".")))
@@ -111,7 +112,7 @@
     "Parses false")
 
   (assert-equal test
-    &(Result.Error @"Value at '.' is not a boolean")
+    &(Result.Error @"Value is not a boolean")
     &(Result.and-then
              (parse "\"wow\"")
              &(fn [p] (get-bool &p ".")))
@@ -132,7 +133,7 @@
     "Parses maybe bool, nothing")
 
   (assert-equal test
-    &(Result.Error @"Value at '.' is not a boolean or null")
+    &(Result.Error @"Value is not a boolean or null")
     &(Result.and-then
              (parse "44")
              &(fn [p] (get-maybe-bool &p ".")))
@@ -283,7 +284,7 @@
     &(Result.Success 3.14)
     &(Result.and-then
              (parse "[3.14]")
-             &(fn [p] (get-number &(get-from-arr p 0) ".")))
+             &(fn [p] (get-number &p [(Idx 0)])))
     "Can parse array with a single thing in it")
 
   (assert-equal test
@@ -291,5 +292,12 @@
     &(Result.and-then
              (parse "[\"string\", 42, false]")
              &(fn [p] (get-number &(get-from-arr p 1) ".")))
-    "Can parse array with things in it"))
+    "Can parse array with things in it")
+
+  (assert-equal test
+    &(Result.Success @"val")
+    &(Result.and-then
+             (parse "{\"key-one\": [{\"key-two\": \"val\"}]}")
+             &(fn [p] (get-string &(get &p [(Key @"key-one") (Idx 0) (Key @"key-two")]) ".")))
+    "Can access deeply nested objects and array"))
 
