@@ -1,3 +1,5 @@
+(Debug.sanitize-addresses)
+
 (load "Test.carp")
 
 (load "../src/parse.carp")
@@ -27,26 +29,6 @@
              &(fn [p] (get-string &p ".")))
     "Returns error if trying to get a string where there is another type")
 
-  (assert-equal test
-    &(Result.Success (Maybe.Just @"Hello"))
-    &(Result.and-then
-             (parse "\"Hello\"")
-             &(fn [p] (get-maybe-string &p ".")))
-    "Parses maybe string, just")
-
-  (assert-equal test
-    &(Result.Success (Maybe.Nothing))
-    &(Result.and-then
-             (parse "null")
-             &(fn [p] (get-maybe-string &p ".")))
-    "Parses maybe string, nothing")
-
-  (assert-equal test
-    &(Result.Error @"Value is not a string or null")
-    &(Result.and-then
-             (parse "true")
-             &(fn [p] (get-maybe-string &p ".")))
-    "Parses maybe string, type error")
 
   (assert-equal test
     &(Result.Success 1234.0)
@@ -77,27 +59,6 @@
     "Returns error if trying to get a number where there is another type")
 
   (assert-equal test
-    &(Result.Success (Maybe.Just 3.14))
-    &(Result.and-then
-             (parse "3.14")
-             &(fn [p] (get-maybe-number &p ".")))
-    "Parses maybe number, just")
-
-  (assert-equal test
-    &(Result.Success (Maybe.Nothing))
-    &(Result.and-then
-             (parse "null")
-             &(fn [p] (get-maybe-number &p ".")))
-    "Parses maybe number, nothing")
-
-  (assert-equal test
-    &(Result.Error @"Value is not a number or null")
-    &(Result.and-then
-             (parse "false")
-             &(fn [p] (get-maybe-number &p ".")))
-    "Parses maybe number, type error")
-
-  (assert-equal test
     &(Result.Success true)
     &(Result.and-then
              (parse "true")
@@ -119,27 +80,6 @@
     "Returns error if trying to get a bool where there is another type")
 
   (assert-equal test
-    &(Result.Success (Maybe.Just false))
-    &(Result.and-then
-             (parse "false")
-             &(fn [p] (get-maybe-bool &p ".")))
-    "Parses maybe bool, just")
-
-  (assert-equal test
-    &(Result.Success (Maybe.Nothing))
-    &(Result.and-then
-             (parse "null")
-             &(fn [p] (get-maybe-bool &p ".")))
-    "Parses maybe bool, nothing")
-
-  (assert-equal test
-    &(Result.Error @"Value is not a boolean or null")
-    &(Result.and-then
-             (parse "44")
-             &(fn [p] (get-maybe-bool &p ".")))
-    "Parses maybe bool, type error")
-
-  (assert-equal test
     &(Result.Success @"wow")
     &(Result.and-then
              (parse "{\"a-key\": \"wow\"}")
@@ -152,20 +92,6 @@
              (parse "{\"a-key\": \"wow\", \"another-key\": \"string\"}")
              &(fn [p] (get-string &p ".another-key")))
     "Parses strings in object")
-
-  (assert-equal test
-    &(Result.Success (Maybe.Just @"a string"))
-    &(Result.and-then
-             (parse "{\"a-key\": \"a string\"}")
-             &(fn [p] (get-maybe-string &p ".a-key")))
-    "Parses maybe string in object, just")
-
-  (assert-equal test
-    &(Result.Success (Maybe.Nothing))
-    &(Result.and-then
-             (parse "{\"a-key\": null}")
-             &(fn [p] (get-maybe-number &p ".a-key")))
-    "Parses maybe string in object, nothing")
 
   (assert-equal test
     &(Result.Success 3.14)
@@ -182,39 +108,11 @@
     "Errors parsing invalid number in object")
 
   (assert-equal test
-    &(Result.Success (Maybe.Just 1992.0))
-    &(Result.and-then
-             (parse "{\"a-key\": 1992}")
-             &(fn [p] (get-maybe-number &p ".a-key")))
-    "Parses maybe number in object, just")
-
-  (assert-equal test
-    &(Result.Success (Maybe.Nothing))
-    &(Result.and-then
-             (parse "{\"a-key\": null}")
-             &(fn [p] (get-maybe-number &p ".a-key")))
-    "Parses maybe number in object, nothing")
-
-  (assert-equal test
     &(Result.Success false)
     &(Result.and-then
              (parse "{\"a-key\": false, \"another-key\": \"string\"}")
              &(fn [p] (get-bool &p ".a-key")))
     "Parses bool in object")
-
-  (assert-equal test
-    &(Result.Success (Maybe.Just false))
-    &(Result.and-then
-             (parse "{\"a-key\": false}")
-             &(fn [p] (get-maybe-bool &p ".a-key")))
-    "Parses maybe bool in object, just")
-
-  (assert-equal test
-    &(Result.Success (Maybe.Nothing))
-    &(Result.and-then
-             (parse "{\"a-key\": null}")
-             &(fn [p] (get-maybe-bool &p ".a-key")))
-    "Parses maybe bool in object, nothing")
 
   (assert-equal test
     &(Result.Error @"Expected colon but got a different token")
@@ -298,6 +196,6 @@
     &(Result.Success @"val")
     &(Result.and-then
              (parse "{\"key-one\": [{\"key-two\": \"val\"}]}")
-             &(fn [p] (get-string &(get &p [(Key @"key-one") (Idx 0) (Key @"key-two")]) ".")))
+             &(fn [p] (get-string &p [(Key @"key-one") (Idx 0) (Key @"key-two")])))
     "Can access deeply nested objects and array"))
 

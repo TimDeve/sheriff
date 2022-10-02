@@ -1,8 +1,13 @@
 (register-type SheriffJsonNodeBox "void*")
 (defmodule SheriffJsonNodeBox
-  (sig prn (Fn [(Ref SheriffJsonNodeBox)] String))
-  (defn prn [bx] @"SheriffJsonNodeBox")
-  (implements prn SheriffJsonNodeBox.prn)
+  (register = (Fn [(Ref SheriffJsonNodeBox) (Ref SheriffJsonNodeBox)] Bool))
+  (implements = =)
+
+  (register prn (Fn [(Ref SheriffJsonNodeBox)] String))
+  (implements prn prn)
+
+  (register zero (Fn [] SheriffJsonNodeBox))
+  (implements zero zero)
 
   (deftemplate copy (Fn [(Ref SheriffJsonNodeBox)] SheriffJsonNodeBox)
                     "void* $NAME(void** pptr)"
@@ -30,6 +35,27 @@
  (Bol [Bool])
  Null)
 
+(defmodule SheriffJsonNode
+  (defn type-name [n]
+   (match-ref n
+    (Arr _) @"array"
+    (Bol _) @"boolean"
+    (Num _) @"number"
+    (Obj _) @"object"
+    (Str _) @"string"
+    Null    @"null"))
+
+  (sig = (Fn [(Ref SheriffJsonNode) (Ref SheriffJsonNode)] Bool))
+  (defn = [a b]
+   (match-ref a
+    (Arr aa) (match-ref b (Arr bb) (= aa bb) _ false)
+    (Bol aa) (match-ref b (Bol bb) (= aa bb) _ false)
+    (Num aa) (match-ref b (Num bb) (= aa bb) _ false)
+    (Obj aa) (match-ref b (Obj bb) (= aa bb) _ false)
+    (Str aa) (match-ref b (Str bb) (= aa bb) _ false)
+    Null     (match-ref b Null     true      _ false)))
+  (implements = =))
+
 (defmodule SheriffJsonNodeBox
   (deftemplate box (Fn [SheriffJsonNode] SheriffJsonNodeBox)
                    "void* $NAME(SheriffJsonNode some)"
@@ -44,7 +70,7 @@
                      "SheriffJsonNode $NAME(void* box)"
                      "$DECL {
                         SheriffJsonNode some = *((SheriffJsonNode*)box);
-                        free(box);
+                        CARP_FREE(box);
                         return some;
                       }")
 
@@ -55,5 +81,8 @@
                      }")
 
   (defn zero [] (box (SheriffJsonNode.Null)))
-  (implements zero SheriffJsonNodeBox.zero))
+  (defn prn [a] (str (peek a)))
+  (defn prn-owned [a] (SheriffJsonNodeBox.prn &a))
+  (implements prn prn-owned)
+  (defn = [a b] (= (peek a) (peek b))))
 

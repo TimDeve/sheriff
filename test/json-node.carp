@@ -13,7 +13,7 @@
       (Debug.reset-memory-balance!)
       (ignore (box (Str @"Box")))
       (Debug.memory-balance))
-    "Doesn't leak - Simple box")
+    "Doesn't leak | Simple box")
 
   (assert-equal test
     0l
@@ -21,7 +21,7 @@
       (Debug.reset-memory-balance!)
       (ignore [(box (Bol false)) @&(box (Bol false)) (box (Str @"Ok"))])
       (Debug.memory-balance))
-    "Doesn't leak - Array of box")
+    "Doesn't leak | Array of box")
 
   (assert-equal test
     0l
@@ -29,7 +29,7 @@
       (Debug.reset-memory-balance!)
       (ignore {@"key" (box (Bol true))})
       (Debug.memory-balance))
-    "Doesn't leak - Map of box")
+    "Doesn't leak | Map of box")
 
   (assert-equal test
     0l
@@ -37,7 +37,7 @@
       (Debug.reset-memory-balance!)
       (ignore (Arr [(box (Bol false))]))
       (Debug.memory-balance))
-    "Doesn't leak - Array of box in sumtype")
+    "Doesn't leak | Array of box in sumtype")
 
   (assert-equal test
     0l
@@ -46,7 +46,7 @@
       (let [arr [(box (Bol false))]]
         (ignore @&arr))
       (Debug.memory-balance))
-    "Doesn't leak - Copying value")
+    "Doesn't leak | Copying value")
 
   (assert-equal test
     "Hello"
@@ -60,4 +60,74 @@
     &(match (unbox (box (Str @"Hello")))
        (Str s) s
        _       @"Failed")
-    "Unbox value"))
+    "Unbox value")
+
+  (assert-equal test
+    "array"
+    &(type-name &(Arr []))
+    "type-name | array")
+
+  (assert-equal test
+    "number"
+    &(type-name &(Num 0.0))
+    "type-name | number")
+
+  (assert-equal test
+    "boolean"
+    &(type-name &(Bol true))
+    "type-name | boolean")
+
+  (assert-equal test
+    "object"
+    &(type-name &(Obj {}))
+    "type-name | object")
+
+  (assert-equal test
+    "string"
+    &(type-name &(Str @""))
+    "type-name | string")
+
+  (assert-equal test
+   &(Null)
+   &(Null)
+   "= | Null should be equal")
+
+  (assert-equal test
+   &(Str @"ok")
+   &(Str @"ok")
+   "= | Str should be equal")
+
+  (assert-equal test
+   &(Num 3.14)
+   &(Num 3.14)
+   "= | Num should be equal")
+
+  (assert-equal test
+   &(Bol true)
+   &(Bol true)
+   "= | Bol should be equal")
+
+  (assert-not-equal test
+   &(Null)
+   &(Str @"string")
+   "= | Null and Str should not be equal")
+
+  (assert-equal test
+   &(Arr [(box (Str @"one")) (box (Num 3.14)) (box (Null)) (box (Bol true))])
+   &(Arr [(box (Str @"one")) (box (Num 3.14)) (box (Null)) (box (Bol true))])
+   "= | Arr should be equal")
+
+  (assert-equal test
+   &(Obj {@"key-one" (box (Str @"one")) @"key-2" (box (Num 3.14)) @"key-3" (box (Null)) @"key-4" (box (Bol true))})
+   &(Obj {@"key-one" (box (Str @"one")) @"key-2" (box (Num 3.14)) @"key-3" (box (Null)) @"key-4" (box (Bol true))})
+   "= | Obj should be equal")
+
+  (assert-not-equal test
+   &(Obj {@"key-one" (box (Str @"one"))})
+   &(Obj {@"key-two" (box (Str @"one"))})
+   "= | Obj with diff keys should not be equal")
+
+  (assert-not-equal test
+   &(Obj {@"key-one" (box (Str @"one"))})
+   &(Obj {@"key-one" (box (Str @"two"))})
+   "= | Obj with same key and different content should not be equal"))
