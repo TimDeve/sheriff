@@ -22,6 +22,10 @@
 (deftype NestedObj [obj NumberStruct])
 (derive NestedObj =)
 
+(deftype NestedArray [arr (Array Int)])
+(derive NestedArray =)
+(derive NestedArray from-json)
+
 (deftest test
   (assert-equal test
     &(Result.Success @"wow")
@@ -71,10 +75,40 @@
   (assert-equal test
     &(Result.Success (NestedObj.init (NumberStruct.init 3.14)))
     &(SheriffJSON.unmarshall NestedObj "{\"obj\": {\"key-one\": 3.14}}")
-    "Works with nested structs"))
+    "Works with nested structs")
 
-  ; (assert-equal test
-  ;   &(Result.Success [1 2 3])
-  ;   &(SheriffJSON.unmarshall (Array Int) "[1, 2 ,3]")
-  ;   "Works with array"))
+  (assert-equal test
+    &(Result.Success [1 2 3])
+    &(SheriffJSON.unmarshall (Array Int) "[1, 2, 3]")
+    "Works with array | Int")
+
+  (assert-equal test
+    &(Result.Success [1.0 2.0 3.0])
+    &(SheriffJSON.unmarshall (Array Double) "[1, 2, 3]")
+    "Works with array | Double")
+
+  (assert-equal test
+    &(Result.Success [[1.0 2.0 3.0]])
+    &(SheriffJSON.unmarshall (Array (Array Double)) "[[1, 2, 3]]")
+    "Works with array | Nested")
+
+  (assert-equal test
+    &(Result.Success [(NestedObj (NumberStruct 3.14)) (NestedObj (NumberStruct 42.0))])
+    &(SheriffJSON.unmarshall (Array NestedObj) "[{\"obj\": {\"key-one\": 3.14}}, {\"obj\": {\"key-one\": 42}}]")
+    "Works with array | Nested Object")
+
+  (assert-equal test
+    &(Result.Success (NestedArray [1 2 3]))
+    &(NestedArray.from-json "{\"arr\": [1, 2, 3]}")
+    "Works with array | Nested Array in Object")
+
+  (assert-equal test
+    &(Result.Error @"Value is not a number")
+    &(SheriffJSON.unmarshall (Array Double) "[1, \"hello\", 3]]")
+    "Works with array | Wrong type I")
+
+  (assert-equal test
+    &(Result.Error @"Value is not a string")
+    &(SheriffJSON.unmarshall (Array String) "[\"hello\", 3]]")
+    "Works with array | Wrong type II"))
 

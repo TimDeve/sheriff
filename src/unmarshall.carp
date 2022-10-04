@@ -46,18 +46,45 @@
     (and (list? t)
          (= (car t) 'Array)))
 
+  (defndynamic unwrap-arr [t a]
+    (let [a* (gensym-with 'a)
+          new-arr (gensym-with 'new-arr)
+          error   (gensym-with 'error)
+          i (gensym-with 'i)
+          err (gensym-with 'err)
+          msuccess (gensym-with 'msuccess)
+          merror (gensym-with 'merror)
+          unbox `(SheriffJsonNodeBox.unbox (copy (Array.unsafe-nth %a* %i)))
+          get-val (SheriffJSON.get-value t unbox '[])]
+      `(let-do [%a* &%a
+                %new-arr []
+                %error (Maybe.Nothing)
+                %i 0]
+         (while-do (and (Maybe.nothing? &%error)
+                        (< %i (Array.length %a*)))
+          (match %get-val
+           (Result.Success %msuccess) (Array.push-back! &%new-arr %msuccess)
+           (Result.Error %merror) (set! %error (Just %merror)))
+          (set! %i (inc %i)))
+         (match %error
+           (Just %err) (Result.Error %err)
+           _ (Result.Success %new-arr)))))
+
   (defndynamic build-arr [t parsed path]
-    (let [tt (cadr t)]
-     '(Result.Success [])))
+    (let [val (gensym-with 'val)
+          arr (gensym-with 'arr)
+          unwrap (SheriffJSON.unwrap-arr t arr)]
+     `(Result.and-then (SheriffJSON.get %parsed %path)
+       &(fn [%val]
+         (match %val
+           (SheriffJsonNode.Arr %arr) %unwrap
+           _ (Error @"Not an array"))))))
 
   (defndynamic get-value [t parsed path]
     (let [ref-parsed  (list 'ref parsed)
           assert-path (list 'the '(Array SheriffJSONGetAccess) path)]
      (cond
-      ; (SheriffJSON.type-is-array? t) (SheriffJSON.build-arr t parsed path)
-
-      (SheriffJSON.type-is-array? t)
-      (macro-error (String.concat [(str t) " is not supported by unmarshall"]))
+      (SheriffJSON.type-is-array? t) (SheriffJSON.build-arr (cadr t) ref-parsed assert-path)
 
       (list? t)
       (macro-error (String.concat [(str t) " is not supported by unmarshall"]))
