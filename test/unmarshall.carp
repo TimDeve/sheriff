@@ -6,9 +6,9 @@
 
 (use Test)
 
-(deftype AllStruct [st String bol Bool deci Double int Int num Double])
-(derive AllStruct =)
-(derive AllStruct from-json)
+(deftype AllScalarStruct [st String bol Bool deci Double int Int num Double])
+(derive AllScalarStruct =)
+(derive AllScalarStruct from-json)
 
 (deftype StringsStruct [key-one String keytwo String])
 (derive StringsStruct =)
@@ -18,6 +18,9 @@
 
 (deftype NumberStruct [key-one Double])
 (derive NumberStruct =)
+
+(deftype NestedObj [obj NumberStruct])
+(derive NestedObj =)
 
 (deftest test
   (assert-equal test
@@ -56,12 +59,22 @@
     "Works with struct with number")
 
   (assert-equal test
-    &(Result.Success (AllStruct.init @"Hello Hello" false 1234.5678 8 42.0))
-    &(SheriffJSON.unmarshall AllStruct "{\"st\": \"Hello Hello\", \"num\": 42, \"deci\": 1234.5678, \"bol\": false, \"int\": 8}")
+    &(Result.Success (AllScalarStruct.init @"Hello Hello" false 1234.5678 8 42.0))
+    &(SheriffJSON.unmarshall AllScalarStruct "{\"st\": \"Hello Hello\", \"num\": 42, \"deci\": 1234.5678, \"bol\": false, \"int\": 8}")
     "Works with struct with all supported types")
 
   (assert-equal test
-    &(Result.Success (AllStruct.init @"Hello Hello" false 1234.5678 8 42.0))
-    &(AllStruct.from-json "{\"st\": \"Hello Hello\", \"num\": 42, \"deci\": 1234.5678, \"bol\": false, \"int\": 8}")
-    "Works with struct with all supported types & from-json"))
+    &(Result.Success (AllScalarStruct.init @"Hello Hello" false 1234.5678 8 42.0))
+    &(AllScalarStruct.from-json "{\"st\": \"Hello Hello\", \"num\": 42, \"deci\": 1234.5678, \"bol\": false, \"int\": 8}")
+    "Works with struct with all supported types & from-json")
+
+  (assert-equal test
+    &(Result.Success (NestedObj.init (NumberStruct.init 3.14)))
+    &(SheriffJSON.unmarshall NestedObj "{\"obj\": {\"key-one\": 3.14}}")
+    "Works with nested structs"))
+
+  ; (assert-equal test
+  ;   &(Result.Success [1 2 3])
+  ;   &(SheriffJSON.unmarshall (Array Int) "[1, 2 ,3]")
+  ;   "Works with array"))
 
