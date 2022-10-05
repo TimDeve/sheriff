@@ -1,14 +1,15 @@
-.PHONY: pre-push run-example build-example test
+.PHONY: pre-push
+pre-push: build-examples test
 
-pre-push: build-example test
+.PHONY: run-examples
+run-examples:
+	@./scripts/examples.sh -x
 
-run-example:
-	@carp -x example.carp
+.PHONY: build-examples
+build-examples:
+	@./scripts/examples.sh -b
 
-build-example:
-	@echo "Building example..."
-	@carp -b example.carp
-
+.PHONY: test
 test:
-	@./test.sh
+	@./scripts/tests.sh
 

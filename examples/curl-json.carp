@@ -1,0 +1,27 @@
+(load "https://github.com/TimDeve/subprocess@v0.0.2")
+(load "../sheriff.carp")
+
+(use-all Subprocess SubprocessRes SubprocessOptions Maybe Array Result)
+
+(deftype Post
+  [id    Int
+   title String
+   body  String])
+(derive Post from-json)
+
+(defn main []
+  (let [res (cmd (sps) &[@"curl" @"-sS" @"https://jsonplaceholder.typicode.com/posts/1"])
+        code (exit-code &res)]
+    (if (not (= @code 0))
+      @code
+      (match-ref (out &res)
+        Nothing 1
+        (Just std-out)
+        (match (Post.from-json std-out)
+          (Result.Error err) (do (IO.println &err) 1)
+          (Result.Success post)
+          (do
+            (println* "id: "    (Post.id &post))
+            (println* "title: " (Post.title &post))
+            (println* "body: "  (Post.body &post))
+            0))))))
