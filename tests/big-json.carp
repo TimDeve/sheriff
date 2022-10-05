@@ -1,0 +1,72 @@
+(Debug.sanitize-addresses)
+
+(load "Test.carp")
+
+(load "../sheriff.carp")
+
+(use-all Test Array Maybe Result)
+
+(deftype Struct [num Int string String])
+(derive Struct =)
+(derive Struct zero)
+
+(def big-number &1000)
+
+(defn tr [a]
+  (do (println* &a)
+      a))
+
+(defn timing [a]
+  (do (println* (System.time))
+      a))
+
+(defn gen-big-json-array []
+  (fmt "[%s]"
+       &(String.join ", "
+                     &(copy-map &(fn [i] (fmt "{\"num\": %d,
+                                             \"string\": \"this is a string\",
+                                             \"null\": null,
+                                             \"true\": true,
+                                             \"false\": false}" i))
+                                &(range-or-default 0 @big-number 1)))))
+
+(defn gen-big-json-object []
+  (fmt "{%s}"
+       &(String.join ", "
+                     &(copy-map &(fn [i] (fmt "\"%d\":
+                                             {\"num\": %d,
+                                             \"string\": \"this is a string\",
+                                             \"null\": null,
+                                             \"true\": true,
+                                             \"false\": false}" @i @i))
+                                &(range-or-default 0 @big-number 1)))))
+
+(defn gen-big-string []
+  (String.join ", "
+               &(copy-map &(fn [i] (fmt "%d: Lorem ipsum dolor sit amet" @i))
+                          &(range-or-default 0 @big-number 1))))
+
+(def big-string (gen-big-string))
+
+(deftest test
+  (assert-equal test
+    &(Result.Success (Struct @big-number @"this is a string"))
+    (=> (SheriffJSON.unmarshall (Array Struct) &(gen-big-json-array))
+        (map &(fn [arr] (or-zero (nth &arr @big-number))))
+        (ref))
+    "Can parse large array")
+
+  (assert-equal test
+    &(Result.Success (Double.from-int @big-number))
+    (=> (SheriffJSON.parse &(gen-big-json-object))
+        (and-then &(fn [j] (SheriffJSON.get-number &j [(Key (fmt "%d" @big-number)) (Key @"num")])))
+        (ref))
+    "Can parse large obj")
+
+  (assert-equal test
+    &(Result.Success @&big-string)
+    (=> (SheriffJSON.parse &(fmt "\"%s\"" &big-string))
+        (and-then &(fn [j] (SheriffJSON.get-string &j ".")))
+        (ref))
+    "Can parse large string"))
+

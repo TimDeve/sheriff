@@ -90,83 +90,54 @@
           (Error @"Unmatched double-quote")
           (Success (Pair.init i (SheriffTok.Str (String.from-chars &char-str))))))))
 
-  (defn lex-i [i chrs res-toks]
-    (match res-toks
-      (Error e) (Error e)
-      (Success toks)
-      (if (>= i (Array.length chrs))
-        (Success toks)
-        (let [current-char (Array.unsafe-nth chrs i)]
-          (if (is-white-space? current-char)
-            (lex-i (inc i) chrs (the (Result (Array SheriffTok) String) (Success toks)))
-            (if (Char.num? @current-char)
-              (let [num-pair (lex-number i chrs)]
-               (match num-pair
-                 (Error e) (Error e)
-                 (Success pair)
-                 (lex-i @(Pair.a &pair)
-                     chrs
-                     (the (Result (Array SheriffTok) String)
-                      (Success (Array.push-back toks @(Pair.b &pair)))))))
-              (case @current-char
-                \{ (lex-i (inc i)
-                          chrs
-                          (the (Result (Array SheriffTok) String)
-                           (Success (Array.push-back toks (SheriffTok.LeftCurly)))))
-                \} (lex-i (inc i)
-                          chrs
-                          (the (Result (Array SheriffTok) String)
-                           (Success (Array.push-back toks (SheriffTok.RightCurly)))))
-                \[ (lex-i (inc i)
-                          chrs
-                          (the (Result (Array SheriffTok) String)
-                           (Success (Array.push-back toks (SheriffTok.LeftBracket)))))
-                \] (lex-i (inc i)
-                          chrs
-                          (the (Result (Array SheriffTok) String)
-                           (Success (Array.push-back toks (SheriffTok.RightBracket)))))
-                \: (lex-i (inc i)
-                          chrs
-                          (the (Result (Array SheriffTok) String)
-                           (Success (Array.push-back toks (SheriffTok.Colon)))))
-                \, (lex-i (inc i)
-                          chrs
-                          (the (Result (Array SheriffTok) String)
-                           (Success (Array.push-back toks (SheriffTok.Comma)))))
-                \n (if (not (is-null? i chrs))
-                     (Error @"Failed to lex null token")
-                     (lex-i (+ 4 i)
-                            chrs
-                            (the (Result (Array SheriffTok) String)
-                             (Success (Array.push-back toks (SheriffTok.Null))))))
-                \t (if (not (is-true? i chrs))
-                     (Error @"Failed to lex true token")
-                     (lex-i (+ 4 i)
-                            chrs
-                            (the (Result (Array SheriffTok) String)
-                             (Success (Array.push-back toks (SheriffTok.Bol true))))))
-                \f (if (not (is-false? i chrs))
-                     (Error @"Failed to lex false token")
-                     (lex-i (+ 5 i)
-                            chrs
-                            (the (Result (Array SheriffTok) String)
-                             (Success (Array.push-back toks (SheriffTok.Bol false))))))
-                \" (let [string-pair (lex-string (inc i) chrs)]
-                    (match string-pair
-                      (Error e) (Error e)
-                      (Success pair)
-                      (lex-i (inc @(Pair.a &pair))
-                          chrs
-                          (the (Result (Array SheriffTok) String)
-                           (Success (Array.push-back toks @(Pair.b &pair)))))))
-               (Error (String.append "Unexpect char = " &(str @current-char))))))))))
-
   (sig lex (Fn [(Ref String)] (Result (Array SheriffTok) String)))
   (defn lex [s]
-   (the (Result (Array SheriffTok) String)
-    (let [chrs (chars s)]
-     (lex-i 0
-            &chrs
-            (the (Result (Array SheriffTok) String)
-                 (Success [])))))))
+    (let-do [i 0
+             chrs &(chars s)
+             error (Nothing)
+             toks []]
+      (while (and (nothing? &error) (< i (Array.length chrs)))
+        (let [current-char (Array.unsafe-nth chrs i)]
+          (if (is-white-space? current-char)
+            (set! i (inc i))
+            (if (Char.num? @current-char)
+              (match (lex-number i chrs)
+                (Error err) (set! error (Just err))
+                (Success pair)
+                (do (set! i @(Pair.a &pair))
+                    (Array.push-back! &toks @(Pair.b &pair))))
+              (case @current-char
+                \{ (do (set! i (inc i))
+                       (Array.push-back! &toks (SheriffTok.LeftCurly)))
+                \} (do (set! i (inc i))
+                       (Array.push-back! &toks (SheriffTok.RightCurly)))
+                \[ (do (set! i (inc i))
+                       (Array.push-back! &toks (SheriffTok.LeftBracket)))
+                \] (do (set! i (inc i))
+                       (Array.push-back! &toks (SheriffTok.RightBracket)))
+                \: (do (set! i (inc i))
+                       (Array.push-back! &toks (SheriffTok.Colon)))
+                \, (do (set! i (inc i))
+                       (Array.push-back! &toks (SheriffTok.Comma)))
+                \n (if (is-null? i chrs)
+                     (do (set! i (+ i 4))
+                         (Array.push-back! &toks (SheriffTok.Null)))
+                     (set! error  (Just @"Failed to lex null token")))
+                \t (if (is-true? i chrs)
+                     (do (set! i (+ i 4))
+                         (Array.push-back! &toks (SheriffTok.Bol true)))
+                     (set! error (Just @"Failed to lex true token")))
+                \f (if (is-false? i chrs)
+                     (do (set! i (+ i 5))
+                         (Array.push-back! &toks (SheriffTok.Bol false)))
+                     (set! error (Just @"Failed to lex false token")))
+                \" (match (lex-string (inc i) chrs)
+                      (Error e) (set! error (Just e))
+                      (Success pair)
+                      (do (set! i (inc @(Pair.a &pair)))
+                          (Array.push-back! &toks @(Pair.b &pair))))
+               (set! error (Just (String.append "Unexpect char = " &(str @current-char)))))))))
+      (match error
+        (Nothing)  (Success toks)
+        (Just err) (Error err)))))
 
