@@ -23,6 +23,20 @@
     "Parses string")
 
   (assert-equal test
+    &(Result.Success @"wow\nwow")
+    &(Result.and-then
+             (parse "\"wow\\nwow\"")
+             &(fn [p] (get-string &p ".")))
+    "Parses string with newline")
+
+  (assert-equal test
+    &(Result.Success @"\"")
+    &(Result.and-then
+             (parse "\"\\\"\"")
+             &(fn [p] (get-string &p ".")))
+    "Parses string with a double quote")
+
+  (assert-equal test
     &(Result.Error @"Value is not a string")
     &(Result.and-then
              (parse "1")

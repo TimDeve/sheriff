@@ -106,13 +106,17 @@
         (Just num) (Success (Pair.init (Num num) (inc i)))
         (Nothing) (Error @"Number not a valid double"))))
 
+  ; TODO Parse escaped value properly
+  (defn- parse-string [s]
+   (Pattern.substitute #"\\n" s "\n" -1))
+
   (defn- parse-toks [toks i]
     (with SheriffJsonNode
       (with SheriffJsonNodeBox
         (let [tok (unsafe-nth toks @&i)]
           (match-ref tok
             (SheriffTok.Null)        (Success (Pair.init (Null) (inc i)))
-            (SheriffTok.Str s)       (Success (Pair.init (Str @s) (inc i)))
+            (SheriffTok.Str s)       (Success (Pair.init (Str (parse-string s)) (inc i)))
             (SheriffTok.Bol b)       (Success (Pair.init (Bol @b) (inc i)))
             (SheriffTok.Num num-str) (parse-num num-str i)
             (SheriffTok.LeftCurly)   (parse-obj toks (inc i))
