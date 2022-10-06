@@ -44,7 +44,7 @@
     "Works with strings with double quotes in them")
 
   (assert-equal test
-    "\"\\\"\\'\\t\\r\\n\\\\\""
+    "\"\\\"'\\t\\r\\n\\\\\""
     &(stringify (s @"\"'\t\r\n\\"))
     "Works with strings with 'bad' char in them")
 

@@ -106,13 +106,30 @@
         (Just num) (Success (Pair.init (Num num) (inc i)))
         (Nothing) (Error @"Number not a valid double"))))
 
+  ; TODO Parse escaped value properly instead of going
+  ; through string a million time
+  (defn- parse-string [s]
+    (let [sub $[(Pair.init (Pattern "\\\\\"") @"\"") ; Replaces \" with "
+                (Pair.init @#"\\n"  @"\n")           ; Replaces \n with newline
+                (Pair.init @#"\\t"  @"\t")           ; Replaces \t with tab
+                (Pair.init @#"\\b"  @"\b")           ; Replaces \b with backspace
+                (Pair.init @#"\\f"  @"\f")           ; Replaces \f with formfeed
+                (Pair.init @#"\\r"  @"\r")           ; Replaces \r with carriage return
+                (Pair.init @#"\\/"  @"/")            ; Replaces \/ with /
+                (Pair.init @#"\\\\" @"\\\\")]]       ; Replaces \\ with \
+      (StaticArray.reduce
+       &(fn [acc pair]
+         (Pattern.substitute (Pair.a pair) &acc (Pair.b pair) -1))
+       @s
+       sub)))
+
   (defn- parse-toks [toks i]
     (with SheriffJsonNode
       (with SheriffJsonNodeBox
         (let [tok (unsafe-nth toks @&i)]
           (match-ref tok
             (SheriffTok.Null)        (Success (Pair.init (Null) (inc i)))
-            (SheriffTok.Str s)       (Success (Pair.init (Str @s) (inc i)))
+            (SheriffTok.Str s)       (Success (Pair.init (Str (parse-string s)) (inc i)))
             (SheriffTok.Bol b)       (Success (Pair.init (Bol @b) (inc i)))
             (SheriffTok.Num num-str) (parse-num num-str i)
             (SheriffTok.LeftCurly)   (parse-obj toks (inc i))

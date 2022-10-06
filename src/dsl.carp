@@ -10,7 +10,6 @@
   (defn escape-string [s]
     (let [sub $[(Pair.init @#"\\" @"\\\\\\\\")
                 (Pair.init (Pattern.init "\\\"") @"\\\\\"")
-                (Pair.init @#"'" @"\\\\'")
                 (Pair.init @#"\t" @"\\\\t")
                 (Pair.init (Pattern.init "\b") @"\\\\b")
                 (Pair.init (Pattern.init "\f") @"\\\\f")

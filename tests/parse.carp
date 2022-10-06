@@ -23,6 +23,70 @@
     "Parses string")
 
   (assert-equal test
+    &(Result.Success @"wow\nwow")
+    &(Result.and-then
+             (parse "\"wow\\nwow\"")
+             &(fn [p] (get-string &p ".")))
+    "Parses string | newline")
+
+  (assert-equal test
+    &(Result.Success @"\"")
+    &(Result.and-then
+             (parse "\"\\\"\"")
+             &(fn [p] (get-string &p ".")))
+    "Parses string | double quote")
+
+  (assert-equal test
+    &(Result.Success @" / ")
+    &(Result.and-then
+             (parse "\" \\/ \"")
+             &(fn [p] (get-string &p ".")))
+    "Parses string | slash")
+
+  (assert-equal test
+    &(Result.Success @" \\ ")
+    &(Result.and-then
+             (parse "\" \\\\ \"")
+             &(fn [p] (get-string &p ".")))
+    "Parses string | back-slash")
+
+  (assert-equal test
+    &(Result.Success @" \t ")
+    &(Result.and-then
+             (parse "\" \\t \"")
+             &(fn [p] (get-string &p ".")))
+    "Parses string | tab")
+
+  (assert-equal test
+    &(Result.Success @" \b ")
+    &(Result.and-then
+             (parse "\" \\b \"")
+             &(fn [p] (get-string &p ".")))
+    "Parses string | backspace")
+
+  (assert-equal test
+    &(Result.Success @" \f ")
+    &(Result.and-then
+             (parse "\" \\f \"")
+             &(fn [p] (get-string &p ".")))
+    "Parses string | formfeed")
+
+  (assert-equal test
+    &(Result.Success @" \r ")
+    &(Result.and-then
+             (parse "\" \\r \"")
+             &(fn [p] (get-string &p ".")))
+    "Parses string | carriage return")
+
+  ; TODO Parse character code
+  ; (assert-equal test
+  ;   &(Result.Success @"ጷ")
+  ;   &(Result.and-then
+  ;            (parse "\"\\u1337\"")
+  ;            &(fn [p] (get-string &p ".")))
+  ;   "Parses string | character code")
+
+  (assert-equal test
     &(Result.Error @"Value is not a string")
     &(Result.and-then
              (parse "1")
