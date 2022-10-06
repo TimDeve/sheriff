@@ -1,0 +1,22 @@
+(load "https://github.com/TimDeve/subprocess@v0.0.2")
+(load "../sheriff.carp")
+
+(use-all Subprocess SubprocessRes SubprocessOptions Maybe Array Result)
+
+(defn print-result-and-exit [res]
+  (match res
+    (Success mess) (do (IO.println &mess) 0)
+    (Error   mess) (do (IO.println &mess) 1)))
+
+(defn main []
+  (let [res (cmd (sps) &[@"curl" @"-sS" @"https://www.freeforexapi.com/api/live?pairs=GBPUSD"])
+        code (exit-code &res)]
+    (if (not (= @code 0))
+      @code
+      (-> @(out &res)
+          (to-result @"No std-out present")
+          (and-then &(fn [std-out] (SheriffJSON.parse &std-out)))
+          (and-then &(fn [json] (SheriffJSON.get-number &json ".rates.GBPUSD.rate")))
+          (map &(fn [rate] (fmt "1 GBP = %f USD" rate)))
+          (print-result-and-exit)))))
+
