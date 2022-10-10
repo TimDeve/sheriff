@@ -34,6 +34,21 @@
     "Lex numbers by themselves")
 
   (assert-equal test
+    "(Success [(Num @\"-1\")])"
+    &(str &(lex "-1"))
+    "Lex negative numbers by themselves")
+
+  (assert-equal test
+    "(Success [(Num @\"1.0E+2\")])"
+    &(str &(lex "1.0E+2"))
+    "Lex numbers with exponent")
+
+  (assert-equal test
+    "(Success [(Num @\"1.0E-2\")])"
+    &(str &(lex "1.0E-2"))
+    "Lex numbers with negative exponent")
+
+  (assert-equal test
     "(Success [(LeftCurly) (Str @\"key\") (Colon) (Str @\"value\") (RightCurly)])"
     &(str &(lex "{\"key\": \"value\"}"))
     "Lex string kv")

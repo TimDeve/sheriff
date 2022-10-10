@@ -9,11 +9,6 @@
 
 (use SheriffJSON)
 
-(defn get-from-arr [json i]
-  (unbox (match json
-           (Arr arr) (or-zero (nth &arr i))
-           _         (zero))))
-
 (deftest test
   (assert-equal test
     &(Result.Success @"wow")
@@ -102,6 +97,13 @@
     "Parses number")
 
   (assert-equal test
+    &(Result.Success -0.1337)
+    &(Result.and-then
+             (parse "-0.1337")
+             &(fn [p] (get-number &p ".")))
+    "Parses negative number")
+
+  (assert-equal test
     &(Result.Success 3.14)
     &(Result.and-then
              (parse "3.14")
@@ -109,11 +111,32 @@
     "Parses number with decimals")
 
   (assert-equal test
+    &(Result.Success 314.0)
+    &(Result.and-then
+             (parse "3.14e+2")
+             &(fn [p] (get-number &p ".")))
+    "Parses number with exponent I")
+
+  (assert-equal test
+    &(Result.Success 0.0314)
+    &(Result.and-then
+             (parse "3.14e-2")
+             &(fn [p] (get-number &p ".")))
+    "Parses number with exponent II")
+
+  (assert-equal test
     &(Result.Error @"Number not a valid double")
     &(Result.and-then
              (parse "3..14")
              &(fn [p] (get-number &p ".")))
-    "Errors when parsing invalid number")
+    "Errors when parsing invalid number I")
+
+  (assert-equal test
+    &(Result.Error @"Number not a valid double")
+    &(Result.and-then
+             (parse "-e199")
+             &(fn [p] (get-number &p ".")))
+    "Errors when parsing invalid number II")
 
   (assert-equal test
     &(Result.Error @"Value is not a number")
@@ -253,7 +276,7 @@
     &(Result.Success 42.0)
     &(Result.and-then
              (parse "[\"string\", 42, false]")
-             &(fn [p] (get-number &(get-from-arr p 1) ".")))
+             &(fn [p] (get-number &p [(Idx 1)])))
     "Can parse array with things in it")
 
   (assert-equal test

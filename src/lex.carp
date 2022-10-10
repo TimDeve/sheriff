@@ -12,28 +12,11 @@
  (Bol [Bool])
  (Num [String]))
 
-(defmodule SheriffTok
- (defn to-int [t]
-  (match-ref t
-   LeftCurly 0
-   RightCurly 1
-   LeftBracket 2
-   RightBracket 3
-   Colon 4
-   Comma 5
-   Null 6
-   (Str _) 7
-   (Bol _) 8
-   (Num _) 9))
-
- (defn is-a [a b]
-  (Int.= (to-int a) (to-int b))))
-
 (defmodule SheriffLexer
-  (defn is-white-space? [char]
+  (defn- is-white-space? [char]
     (StaticArray.any? &(fn [c] (= char c)) $[\space \tab \newline \return]))
 
-  (defn is-null? [i chrs]
+  (defn- is-null? [i chrs]
     (if (< (+ i 3) (Array.length chrs))
       (StaticArray.all? &copy
                         $[(= \n @(Array.unsafe-nth chrs i))
@@ -42,7 +25,7 @@
                           (= \l @(Array.unsafe-nth chrs (+ 3 i)))])
       false))
 
-  (defn is-true? [i chrs]
+  (defn- is-true? [i chrs]
     (if (< (+ i 3) (Array.length chrs))
       (StaticArray.all? &copy
                         $[(= \t @(Array.unsafe-nth chrs i))
@@ -51,7 +34,7 @@
                           (= \e @(Array.unsafe-nth chrs (+ 3 i)))])
       false))
 
-  (defn is-false? [i chrs]
+  (defn- is-false? [i chrs]
     (if (< (+ i 4) (Array.length chrs))
       (StaticArray.all? &copy
                         $[(= \f @(Array.unsafe-nth chrs i))
@@ -61,20 +44,24 @@
                           (= \e @(Array.unsafe-nth chrs (+ 4 i)))])
       false))
 
-  (defn lex-number [i chrs]
+  (defn- number-start-char? [c]
+    (or (Char.num? @c)
+        (= @c \-)))
+
+  (defn- lex-number [i chrs]
     (let-do [done false char-str (the (Array Char) [])]
       (while-do (and (< i (Array.length chrs))
                      (not done))
         (let [char (the (Ref Char) (Array.unsafe-nth chrs i))]
           (if (not (StaticArray.any? &(fn [c] (= char c))
-                                     $[\0 \1 \2 \3 \4 \5 \6 \7 \8 \9 \e \.]))
+                                     $[\- \+ \0 \1 \2 \3 \4 \5 \6 \7 \8 \9 \e \E \.]))
             (set! done true)
             (do
               (Array.push-back! &char-str @char)
               (update! i inc)))))
       (Success (Pair.init i (SheriffTok.Num (String.from-chars &char-str))))))
 
-  (defn lex-string [i chrs]
+  (defn- lex-string [i chrs]
     (let [error false done false char-str (the (Array Char) [])]
       (do
         (while (and (< i (Array.length chrs))
@@ -100,7 +87,7 @@
         (let [current-char (Array.unsafe-nth chrs i)]
           (if (is-white-space? current-char)
             (set! i (inc i))
-            (if (Char.num? @current-char)
+            (if (number-start-char? current-char)
               (match (lex-number i chrs)
                 (Error err) (set! error (Just err))
                 (Success pair)
