@@ -1,0 +1,12 @@
+- [ ] SheriffJsonNode stringify
+- [ ] Make dsl use SheriffJsonNode
+- [ ] Unmarshall Maybe
+- [ ] Marshall/Unmarshall SheriffJsonNode
+- [ ] Refactor parsing of escaped char
+- [ ] Allow array access in get string interface
+- [ ] Cleanup API interface
+  - [ ] Does the API itself make sense?
+  - [ ] Make sure private stuff is private
+  - [ ] Review if all the different modules are needed
+  - [ ] Remove the KV stuff?
+  - [ ] Write doc strings

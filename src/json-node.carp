@@ -12,7 +12,7 @@
   (deftemplate copy (Fn [(Ref SheriffJsonNodeBox)] SheriffJsonNodeBox)
                     "void* $NAME(void** pptr)"
                     "$DECL {
-                       SheriffJsonNode *box = (SheriffJsonNode*)CARP_MALLOC(sizeof(SheriffJsonNode));
+                       SheriffJsonNode* box = (SheriffJsonNode*)CARP_MALLOC(sizeof(SheriffJsonNode));
                        assert(box);
                        *box = SheriffJsonNode_copy((SheriffJsonNode*)*pptr);
                        return box;
