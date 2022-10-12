@@ -6,7 +6,10 @@
 (deftype Post
   [id    Int
    title String
-   body  String])
+   body  String
+   user-id Int])
+(SheriffJSON.rename Post
+  [user-id "userId"])
 
 (defn main []
   (let [res (cmd (sps) &[@"curl" @"-sS" @"https://jsonplaceholder.typicode.com/posts"])
@@ -20,7 +23,8 @@
           (Result.Error err) (do (IO.println &err) 1)
           (Result.Success posts)
           (let-do [hundredth-post (unsafe-nth &posts 99)]
-            (println* "id: "    (Post.id hundredth-post))
-            (println* "title: " (Post.title hundredth-post))
-            (println* "body: "  (Post.body hundredth-post))
+            (println* "id: "       (Post.id hundredth-post))
+            (println* "user-id: "  (Post.user-id hundredth-post))
+            (println* "title: "    (Post.title hundredth-post))
+            (println* "body: "     (Post.body hundredth-post))
             0))))))

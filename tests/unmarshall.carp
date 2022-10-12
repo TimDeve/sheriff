@@ -26,6 +26,10 @@
 (derive NestedArray =)
 (derive NestedArray from-json)
 
+(deftype RenameStruct [kebab-case Int other Int])
+(derive RenameStruct =)
+(SheriffJSON.rename RenameStruct [kebab-case "kebabCase"])
+
 (deftest test
   (assert-equal test
     &(Result.Success @"wow")
@@ -110,5 +114,10 @@
   (assert-equal test
     &(Result.Error @"Value is not a string")
     &(SheriffJSON.unmarshall (Array String) "[\"hello\", 3]]")
-    "Works with array | Wrong type II"))
+    "Works with array | Wrong type II")
+
+  (assert-equal test
+    &(Result.Success (RenameStruct 314 100))
+    &(SheriffJSON.unmarshall RenameStruct "{\"kebabCase\": 314, \"other\": 100}")
+    "Can rename fields"))
 

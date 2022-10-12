@@ -8,11 +8,22 @@
 
 (deftype StringsStruct [key-one String keytwo String])
 
+(deftype RenameStruct [one-two Int three Int])
+(SheriffJSON.rename RenameStruct
+  [one-two "oneTwo"])
+(derive RenameStruct =)
+(derive RenameStruct from-json)
+
 (deftest test
   (assert-equal test
     &(Result.Success @"{\"key-one\": \"val one\", \"keytwo\": \"Changed\"}")
-    (=> (SheriffJSON.unmarshall StringsStruct "{\"key-one\": \"val one\", \"keytwo\": \"val two\"}")
-        (Result.map &(fn [struct] (StringsStruct.set-keytwo struct @"Changed")))
-        (Result.map &(fn [struct] (SheriffJSON.marshall StringsStruct &struct)))
-        (ref))
-    "Unmarshall and marshall together"))
+    &(=> (SheriffJSON.unmarshall StringsStruct "{\"key-one\": \"val one\", \"keytwo\": \"val two\"}")
+         (Result.map &(fn [struct] (StringsStruct.set-keytwo struct @"Changed")))
+         (Result.map &(fn [struct] (SheriffJSON.marshall StringsStruct &struct))))
+    "Unmarshall and marshall together")
+
+  (assert-equal test
+    &(Result.Success (RenameStruct 3 14))
+    &(==> &(SheriffJSON.marshall RenameStruct &(RenameStruct 3 14))
+          (SheriffJSON.unmarshall RenameStruct))
+    "Unmarshall and marshall together should be symmetrical"))

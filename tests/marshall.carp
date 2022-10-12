@@ -21,6 +21,10 @@
 (deftype Nested [key-one ABool key-two ADouble])
 (derive Nested to-json)
 
+(deftype RenameStruct [key-one ABool key-two ADouble])
+(SheriffJSON.rename RenameStruct [key-one "keyOne" key-two "keyTwo"])
+(derive RenameStruct to-json)
+
 (deftest test
   (assert-equal test
     "true"
@@ -119,5 +123,12 @@
    &(to-json &(Nested.init
                (ABool.init true)
                (ADouble.init 14.44)))
-   "Works with nested structs and to-json"))
+   "Works with nested structs and to-json")
+
+ (assert-equal test
+   "{\"keyTwo\": {\"val\": 14.44}, \"keyOne\": {\"boooo\": true}}"
+   &(to-json &(RenameStruct.init
+               (ABool.init true)
+               (ADouble.init 14.44)))
+   "Works with rename"))
 

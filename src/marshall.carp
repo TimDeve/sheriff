@@ -1,4 +1,5 @@
 (load "dsl.carp")
+(load "rename.carp")
 
 (definterface to-json (Fn [(Ref a)] String))
 
@@ -63,7 +64,7 @@
   (defndynamic create-pair [t v]
     (fn [type-pair]
       (list 'Pair.init
-         (list 'copy (str (car type-pair)))
+         (list 'copy (SheriffJSON.get-field-rename t (car type-pair)))
          (SheriffJSON.to-str (cadr type-pair)
                          (list (Symbol.prefix t (car type-pair)) v)))))
 

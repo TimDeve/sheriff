@@ -1,0 +1,13 @@
+(defmodule SheriffJSON
+  (defmacro rename [t fields]
+    (eval `(meta-set! %t "SheriffJSON.rename" %fields)))
+
+  (defndynamic get-field-rename [t field]
+    (let [fields (eval `(meta %t "SheriffJSON.rename"))
+          rename-pair
+          (Dynamic.List.find (Dynamic.List.pairs fields) (fn [x] (= (car x) field)))]
+      (if (and (not (empty? rename-pair))
+               (not (nil? (cdr rename-pair)))
+               (not (nil? (cadr rename-pair))))
+        (cadr rename-pair)
+        (str field)))))
