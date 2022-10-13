@@ -43,23 +43,11 @@
                               @"field-b" (o {@"an-array"
                                              (a [(n 1.0) (n 2.0) (n 3.0)])})}))))))
 
-
-(deftype KvType [keyone Int keytwo String keythree Bool])
-
-(defn kv-example []
-  (do
-   (println* "---KV---")
-   (println* &(SheriffKV.unmarshall KvType &{@"keythree" @"true"
-                                             @"keyone" @"3"
-                                             @"keytwo" @"wow"}))))
-
 (defn main []
   (do
    (marshall-example)
-   (println* "")
+   (IO.println "")
    (unmarshall-example)
-   (println* "")
-   (dsl-example)
-   (println* "")
-   (kv-example)))
+   (IO.println "")
+   (dsl-example)))
 

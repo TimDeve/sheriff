@@ -2,7 +2,6 @@
 (load "src/lex.carp")
 (load "src/parse.carp")
 (load "src/get.carp")
-(load "src/kv.carp")
 (load "src/dsl.carp")
 (load "src/marshall.carp")
 (load "src/unmarshall.carp")

@@ -8,5 +8,5 @@
   - [ ] Does the API itself make sense?
   - [ ] Make sure private stuff is private
   - [ ] Review if all the different modules are needed
-  - [ ] Remove the KV stuff?
+  - [X] Remove the KV stuff
   - [ ] Write doc strings
