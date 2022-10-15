@@ -1,0 +1,43 @@
+(Debug.sanitize-addresses)
+
+(load "Test.carp")
+
+(load "../src/stringify.carp")
+
+(use Test)
+
+(deftest test
+  (assert-equal test
+    "3.14"
+    &(SheriffJSON.stringify &(Num 3.14))
+    "Stringify number I")
+
+  (assert-equal test
+    "3122.55"
+    &(SheriffJSON.stringify &(Num 3122.55))
+    "Stringify number II")
+
+  (assert-equal test
+    "3.140000000000001"
+    &(SheriffJSON.stringify &(Num 3.140000000000001))
+    "Stringify number with lots of decimals")
+
+  (assert-equal test
+    "3.14"
+    &(SheriffJSON.stringify &(Num 3.1400000000000001))
+    "Stringify number trim when decimals too long")
+
+  (assert-equal test
+    "3141592653589"
+    &(SheriffJSON.stringify &(Num 3141592653589.0))
+    "Stringify number with no decimals")
+
+  (assert-equal test
+    "true"
+    &(SheriffJSON.stringify &(Bol true))
+    "Stringify true bool")
+
+  (assert-equal test
+    "false"
+    &(SheriffJSON.stringify &(Bol false))
+    "Stringify false bool"))

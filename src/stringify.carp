@@ -1,0 +1,9 @@
+(load "json-node.carp")
+
+(defmodule SheriffJSON
+  (sig stringify (Fn [(Ref SheriffJsonNode)] String))
+  (defn stringify [node]
+    (match-ref node
+      (Num n) (fmt "%.16g" n)
+      (Bol b) (Bool.str @b)
+      _ @"")))
