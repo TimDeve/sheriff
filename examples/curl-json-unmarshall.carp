@@ -10,21 +10,41 @@
    user-id Int])
 (SheriffJSON.rename Post
   [user-id "userId"])
+(derive Post from-json)
 
-(defn main []
+(defn-do print-post [post]
+  (println* "id: "       (Post.id post))
+  (println* "user-id: "  (Post.user-id post))
+  (println* "title: "    (Post.title post))
+  (println* "body: "     (Post.body post)))
+
+(defn fetch-single-post []
+  (let [res (cmd (sps) &[@"curl" @"-sS" @"https://jsonplaceholder.typicode.com/posts/1"])
+        code (exit-code &res)]
+    (if (not (= @code 0))
+      (System.exit @code)
+      (match-ref (out &res)
+        Nothing (System.exit 1)
+        (Just std-out)
+        (match (Post.from-json std-out)
+          (Result.Error err) (do (IO.println &err)
+                                 (System.exit 1))
+          (Result.Success post) (print-post &post))))))
+
+(defn fetch-posts []
   (let [res (cmd (sps) &[@"curl" @"-sS" @"https://jsonplaceholder.typicode.com/posts"])
         code (exit-code &res)]
     (if (not (= @code 0))
-      @code
+      (System.exit @code)
       (match-ref (out &res)
-        Nothing 1
+        Nothing (System.exit 1)
         (Just std-out)
         (match (SheriffJSON.unmarshall (Array Post) std-out)
-          (Result.Error err) (do (IO.println &err) 1)
-          (Result.Success posts)
-          (let-do [hundredth-post (unsafe-nth &posts 99)]
-            (println* "id: "       (Post.id hundredth-post))
-            (println* "user-id: "  (Post.user-id hundredth-post))
-            (println* "title: "    (Post.title hundredth-post))
-            (println* "body: "     (Post.body hundredth-post))
-            0))))))
+          (Result.Error err) (do (IO.println &err)
+                                 (System.exit 1))
+          (Result.Success posts) (print-post (unsafe-nth &posts 99)))))))
+
+(defn-do main []
+  (fetch-single-post)
+  (println* "---")
+  (fetch-posts))
